@@ -29,13 +29,9 @@ func dbSetup() (*sql.DB, error) {
 		return nil, err
 	}
 
-	defer func(db *sql.DB) {
-		cErr := db.Close()
-		if cErr != nil {
-			utils.Error(cErr.Error())
-		}
-	}(db)
-
+	if mErr := migrations.Down(db); mErr != nil {
+		return nil, mErr
+	}
 	if mErr := migrations.Up(db); mErr != nil {
 		return nil, mErr
 	}
@@ -50,7 +46,7 @@ const (
 	routeEntries   = "/entries"
 	routeID        = "/{id}"
 	routeDatasetID = "/{datasetId}"
-	projected      = "projected"
+	projected      = "/projected"
 )
 
 func httpSetup(db *sql.DB) error {
@@ -69,8 +65,8 @@ func httpSetup(db *sql.DB) error {
 	entryRouter := datasetRouter.PathPrefix(routeDatasetID + routeEntries).Subrouter()
 	entryRouter.HandleFunc("", h.CreateEntryHandler).Methods(http.MethodPost)
 	entryRouter.HandleFunc("", h.ListEntriesHandler).Methods(http.MethodGet)
-	entryRouter.HandleFunc(projected+"target", h.ProjectedUntilTargetHandler).Methods(http.MethodGet)
-	entryRouter.HandleFunc(projected+"endDate", h.ProjectedUntilEndDateHandler).Methods(http.MethodGet)
+	entryRouter.HandleFunc(projected+"/target", h.ProjectedUntilTargetHandler).Methods(http.MethodGet)
+	entryRouter.HandleFunc(projected+"/endDate", h.ProjectedUntilEndDateHandler).Methods(http.MethodGet)
 
 	// Entry routes by ID (not scoped under dataset)
 	r.HandleFunc(routeEntries+routeID, h.UpdateEntryHandler).Methods(http.MethodPut)

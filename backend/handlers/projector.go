@@ -8,13 +8,13 @@ import (
 
 // ProjectUntilTarget keeps projecting until targetValue is reached.
 // Stops at 0 if avgChange overshoot into negative values forever.
-func ProjectUntilTarget(dataset database.Dataset, entries []database.Entry) []database.EntryWrapper {
+func ProjectUntilTarget(dataset database.Dataset, entries []database.Entry) []database.Entry {
 	if dataset.TargetValue == nil || len(entries) < 2 {
-		return wrapRealEntries(entries)
+		return entries
 	}
 
 	sortedEntries := sortEntriesByDate(entries)
-	wrapped := wrapRealEntries(sortedEntries)
+	wrapped := sortedEntries
 
 	avgChange, avgStep := calcAverageChange(sortedEntries)
 	if avgChange == 0 {
@@ -26,13 +26,13 @@ func ProjectUntilTarget(dataset database.Dataset, entries []database.Entry) []da
 }
 
 // ProjectUntilEndDate projects until dataset.EndDate (if present)
-func ProjectUntilEndDate(dataset database.Dataset, entries []database.Entry) []database.EntryWrapper {
+func ProjectUntilEndDate(dataset database.Dataset, entries []database.Entry) []database.Entry {
 	if dataset.EndDate == nil || len(entries) < 2 {
-		return wrapRealEntries(entries)
+		return entries
 	}
 
 	sortedEntries := sortEntriesByDate(entries)
-	wrapped := wrapRealEntries(sortedEntries)
+	wrapped := sortedEntries
 
 	avgChange, avgStep := calcAverageChange(sortedEntries)
 	last := sortedEntries[len(sortedEntries)-1]
@@ -49,7 +49,8 @@ func sortEntriesByDate(entries []database.Entry) []database.Entry {
 }
 
 // appendProjectionsUntilTarget appends projected entries until targetValue is reached
-func appendProjectionsUntilTarget(datasetID int, wrapped []database.EntryWrapper, last database.Entry, avgChange float64, avgStep time.Duration, target float64) []database.EntryWrapper {
+func appendProjectionsUntilTarget(datasetID int, wrapped []database.Entry, last database.Entry,
+	avgChange float64, avgStep time.Duration, target float64) []database.Entry {
 	value := last.Value
 	nextDate := last.Date.Add(avgStep)
 
@@ -63,14 +64,12 @@ func appendProjectionsUntilTarget(datasetID int, wrapped []database.EntryWrapper
 			value = 0
 		}
 
-		wrapped = append(wrapped, database.EntryWrapper{
-			Entry: database.Entry{
-				Id:        0,
-				DatasetId: datasetID,
-				Value:     value,
-				Label:     "Projected",
-				Date:      nextDate,
-			},
+		wrapped = append(wrapped, database.Entry{
+			Id:        0,
+			DatasetId: datasetID,
+			Value:     value,
+			Label:     "Projected",
+			Date:      nextDate,
 			Projected: true,
 		})
 		nextDate = nextDate.Add(avgStep)
@@ -80,20 +79,19 @@ func appendProjectionsUntilTarget(datasetID int, wrapped []database.EntryWrapper
 }
 
 // appendProjectionsUntilEndDate appends projected entries until endDate is reached
-func appendProjectionsUntilEndDate(datasetID int, wrapped []database.EntryWrapper, last database.Entry, avgChange float64, avgStep time.Duration, endDate time.Time) []database.EntryWrapper {
+func appendProjectionsUntilEndDate(datasetID int, wrapped []database.Entry, last database.Entry,
+	avgChange float64, avgStep time.Duration, endDate time.Time) []database.Entry {
 	value := last.Value
 	nextDate := last.Date.Add(avgStep)
 
 	for !nextDate.After(endDate) {
 		value += avgChange
-		wrapped = append(wrapped, database.EntryWrapper{
-			Entry: database.Entry{
-				Id:        0,
-				DatasetId: datasetID,
-				Value:     value,
-				Label:     "Projected",
-				Date:      nextDate,
-			},
+		wrapped = append(wrapped, database.Entry{
+			Id:        0,
+			DatasetId: datasetID,
+			Value:     value,
+			Label:     "Projected",
+			Date:      nextDate,
 			Projected: true,
 		})
 		nextDate = nextDate.Add(avgStep)
@@ -118,16 +116,4 @@ func calcAverageChange(entries []database.Entry) (float64, time.Duration) {
 	avgChange := totalChange / float64(len(entries)-1)
 	avgStep := time.Duration(int64(totalTime) / int64(len(entries)-1))
 	return avgChange, avgStep
-}
-
-// wrapRealEntries wraps all existing entries
-func wrapRealEntries(entries []database.Entry) []database.EntryWrapper {
-	wrapped := make([]database.EntryWrapper, len(entries))
-	for i, e := range entries {
-		wrapped[i] = database.EntryWrapper{
-			Entry:     e,
-			Projected: false,
-		}
-	}
-	return wrapped
 }

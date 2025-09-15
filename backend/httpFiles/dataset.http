@@ -1,0 +1,56 @@
+### Create a new dataset
+POST http://localhost:8080/datasets
+Content-Type: application/json
+
+{
+  "name": "Sales Data",
+  "description": "Monthly sales dataset",
+  "target_value": 12345.67,
+  "start_date": "2025-01-01T00:00:00Z",
+  "end_date": "2025-12-31T00:00:00Z"
+}
+
+###
+
+### Create a new dataset
+POST http://localhost:8080/datasets
+Content-Type: application/json
+
+{
+  "name": "Sales Data",
+  "description": "Monthly sales dataset",
+  "target_value": 12345.67,
+  "start_date": "2025-01-01T00:00:00Z",
+  "end_date": "2025-12-31T00:00:00Z"
+}
+
+###
+
+### List all datasets
+GET http://localhost:8080/datasets
+Accept: application/json
+
+###
+
+### Get a dataset by ID
+GET http://localhost:8080/datasets/1
+Accept: application/json
+
+###
+
+### Update a dataset by ID
+PUT http://localhost:8080/datasets/1
+Content-Type: application/json
+
+{
+  "name": "Updated Sales Data",
+  "description": "Updated monthly sales dataset",
+  "target_value": 54321.0,
+  "start_date": "2025-01-01T00:00:00Z",
+  "end_date": "2025-12-31T00:00:00Z"
+}
+
+###
+
+### Delete a dataset by ID
+DELETE http://localhost:8080/datasets/1

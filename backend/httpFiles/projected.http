@@ -1,0 +1,9 @@
+### Project entries until target
+GET http://localhost:8080/datasets/2/entries/projected/target
+Accept: application/json
+
+###
+
+### Project entries until end date
+GET http://localhost:8080/datasets/2/entries/projected/endDate
+Accept: application/json
