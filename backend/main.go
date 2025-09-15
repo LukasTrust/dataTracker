@@ -50,6 +50,7 @@ const (
 	routeEntries   = "/entries"
 	routeID        = "/{id}"
 	routeDatasetID = "/{datasetId}"
+	projected      = "projected"
 )
 
 func httpSetup(db *sql.DB) error {
@@ -68,6 +69,8 @@ func httpSetup(db *sql.DB) error {
 	entryRouter := datasetRouter.PathPrefix(routeDatasetID + routeEntries).Subrouter()
 	entryRouter.HandleFunc("", h.CreateEntryHandler).Methods(http.MethodPost)
 	entryRouter.HandleFunc("", h.ListEntriesHandler).Methods(http.MethodGet)
+	entryRouter.HandleFunc(projected+"target", h.ProjectedUntilTargetHandler).Methods(http.MethodGet)
+	entryRouter.HandleFunc(projected+"endDate", h.ProjectedUntilEndDateHandler).Methods(http.MethodGet)
 
 	// Entry routes by ID (not scoped under dataset)
 	r.HandleFunc(routeEntries+routeID, h.UpdateEntryHandler).Methods(http.MethodPut)

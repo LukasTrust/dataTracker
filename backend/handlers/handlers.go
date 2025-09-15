@@ -137,6 +137,48 @@ func (h *Handler) ListEntriesHandler(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, entries)
 }
 
+// ProjectedUntilTargetHandler is the handler for GET /datasets/{datasetId}/entries/projected/target
+func (h *Handler) ProjectedUntilTargetHandler(w http.ResponseWriter, r *http.Request) {
+	datasetId, err := parseID(r, "datasetId", invalidDatasetId)
+	if err != nil {
+		handleErrorNoMessage(w, err)
+		return
+	}
+	dataset, err := database.GetDataset(h.DB, datasetId)
+	if err != nil {
+		handleErrorNoMessage(w, err)
+		return
+	}
+	entries, err := database.ListEntriesByDataset(h.DB, datasetId)
+	if err != nil {
+		handleErrorNoMessage(w, err)
+		return
+	}
+	wrapped := ProjectUntilTarget(*dataset, entries)
+	writeJSON(w, wrapped)
+}
+
+// ProjectedUntilEndDateHandler is the handler for GET /datasets/{datasetId}/entries/projected/endDate
+func (h *Handler) ProjectedUntilEndDateHandler(w http.ResponseWriter, r *http.Request) {
+	datasetId, err := parseID(r, "datasetId", invalidDatasetId)
+	if err != nil {
+		handleErrorNoMessage(w, err)
+		return
+	}
+	dataset, err := database.GetDataset(h.DB, datasetId)
+	if err != nil {
+		handleErrorNoMessage(w, err)
+		return
+	}
+	entries, err := database.ListEntriesByDataset(h.DB, datasetId)
+	if err != nil {
+		handleErrorNoMessage(w, err)
+		return
+	}
+	wrapped := ProjectUntilEndDate(*dataset, entries)
+	writeJSON(w, wrapped)
+}
+
 // UpdateEntryHandler is the handler for PUT /datasets/{datasetId}/entries/{id}
 func (h *Handler) UpdateEntryHandler(w http.ResponseWriter, r *http.Request) {
 	id, err := parseID(r, id, invalidEntryId)
