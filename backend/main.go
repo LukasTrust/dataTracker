@@ -1,22 +1,32 @@
 package main
 
 import (
+	"backend/handlers"
 	"backend/migrations"
 	"backend/utils"
 	"database/sql"
+	"fmt"
+	"net/http"
+
+	"github.com/gorilla/mux"
 )
 
 func main() {
-	if err := dbSetup(); err != nil {
-		utils.Fatal(err.Error())
+	db, err := dbSetup()
+	if err != nil {
+		utils.Error(err.Error())
+		return
+	}
+	if err := httpSetup(db); err != nil {
+		utils.Error(err.Error())
 		return
 	}
 }
 
-func dbSetup() error {
+func dbSetup() (*sql.DB, error) {
 	db, err := utils.ConnectDB()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	defer func(db *sql.DB) {
@@ -27,7 +37,42 @@ func dbSetup() error {
 	}(db)
 
 	if mErr := migrations.Up(db); mErr != nil {
-		return mErr
+		return nil, mErr
 	}
-	return nil
+	return db, nil
+}
+
+const (
+	port = ":8080"
+
+	// Route parts
+	routeDatasets  = "/datasets"
+	routeEntries   = "/entries"
+	routeID        = "/{id}"
+	routeDatasetID = "/{datasetId}"
+)
+
+func httpSetup(db *sql.DB) error {
+	r := mux.NewRouter()
+	h := &handlers.Handler{DB: db}
+
+	// Dataset subroutine
+	datasetRouter := r.PathPrefix(routeDatasets).Subrouter()
+	datasetRouter.HandleFunc("", h.CreateDatasetHandler).Methods(http.MethodPost)
+	datasetRouter.HandleFunc("", h.ListDatasetsHandler).Methods(http.MethodGet)
+	datasetRouter.HandleFunc(routeID, h.GetDatasetHandler).Methods(http.MethodGet)
+	datasetRouter.HandleFunc(routeID, h.UpdateDatasetHandler).Methods(http.MethodPut)
+	datasetRouter.HandleFunc(routeID, h.DeleteDatasetHandler).Methods(http.MethodDelete)
+
+	// Entry subroutine (scoped under dataset)
+	entryRouter := datasetRouter.PathPrefix(routeDatasetID + routeEntries).Subrouter()
+	entryRouter.HandleFunc("", h.CreateEntryHandler).Methods(http.MethodPost)
+	entryRouter.HandleFunc("", h.ListEntriesHandler).Methods(http.MethodGet)
+
+	// Entry routes by ID (not scoped under dataset)
+	r.HandleFunc(routeEntries+routeID, h.UpdateEntryHandler).Methods(http.MethodPut)
+	r.HandleFunc(routeEntries+routeID, h.DeleteEntryHandler).Methods(http.MethodDelete)
+
+	utils.Success(fmt.Sprintf("Server starting on port %s", port))
+	return http.ListenAndServe(port, r)
 }

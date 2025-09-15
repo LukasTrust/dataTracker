@@ -5,6 +5,8 @@ import (
 	"database/sql"
 )
 
+// CreateDataset creates a new dataset in the database
+// Returns the ID of the new dataset on success, or an error on failure
 func CreateDataset(db *sql.DB, d *Dataset) (int, error) {
 	var id int
 	err := db.QueryRow(`
@@ -18,6 +20,8 @@ func CreateDataset(db *sql.DB, d *Dataset) (int, error) {
 	return id, nil
 }
 
+// UpdateDataset updates a dataset in the database
+// Returns an error on failure
 func UpdateDataset(db *sql.DB, d *Dataset) error {
 	_, err := db.Exec(`
 		UPDATE datasets
@@ -27,6 +31,8 @@ func UpdateDataset(db *sql.DB, d *Dataset) error {
 	return err
 }
 
+// GetDataset returns a dataset from the database by ID
+// Returns the dataset on success or an error on failure
 func GetDataset(db *sql.DB, id int) (*Dataset, error) {
 	d := &Dataset{}
 	err := db.QueryRow(`
@@ -39,6 +45,8 @@ func GetDataset(db *sql.DB, id int) (*Dataset, error) {
 	return d, nil
 }
 
+// ListDatasets returns a list of all datasets in the database
+// Returns a list of datasets on success or an error on failure
 func ListDatasets(db *sql.DB) ([]Dataset, error) {
 	rows, err := db.Query(`SELECT id, name, description, target_value, start_date, end_date FROM datasets`)
 	if err != nil {
@@ -62,13 +70,15 @@ func ListDatasets(db *sql.DB) ([]Dataset, error) {
 	return datasets, nil
 }
 
+// DeleteDataset deletes a dataset from the database by ID
+// Returns an error on failure
 func DeleteDataset(db *sql.DB, id int) error {
 	_, err := db.Exec(`DELETE FROM datasets WHERE id = $1`, id)
 	return err
 }
 
-// Entry Handlers
-
+// CreateEntry creates a new entry in the database
+// Returns the ID of the new entry on success, or an error on failure
 func CreateEntry(db *sql.DB, e *Entry) (int, error) {
 	var id int
 	err := db.QueryRow(`
@@ -82,6 +92,8 @@ func CreateEntry(db *sql.DB, e *Entry) (int, error) {
 	return id, nil
 }
 
+// UpdateEntry updates an entry in the database
+// Returns an error on failure
 func UpdateEntry(db *sql.DB, e *Entry) error {
 	_, err := db.Exec(`
 		UPDATE entries
@@ -91,6 +103,8 @@ func UpdateEntry(db *sql.DB, e *Entry) error {
 	return err
 }
 
+// ListEntriesByDataset returns a list of entries in a dataset
+// Returns a list of entries on success or an error on failure
 func ListEntriesByDataset(db *sql.DB, datasetID int) ([]Entry, error) {
 	rows, err := db.Query(`
 		SELECT id, dataset_id, value, label, date
@@ -118,6 +132,8 @@ func ListEntriesByDataset(db *sql.DB, datasetID int) ([]Entry, error) {
 	return entries, nil
 }
 
+// DeleteEntry deletes an entry from the database by ID
+// Returns an error on failure
 func DeleteEntry(db *sql.DB, id int) error {
 	_, err := db.Exec(`DELETE FROM entries WHERE id = $1`, id)
 	return err
