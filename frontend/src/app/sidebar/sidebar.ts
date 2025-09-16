@@ -1,8 +1,8 @@
-import { CommonModule } from '@angular/common';
+import {CommonModule} from '@angular/common';
 import {Component, input, OnInit, output} from '@angular/core';
-import { RouterModule } from '@angular/router';
-import { Dataset } from '../models/dataset-model';
-import { HttpClient } from '@angular/common/http';
+import {RouterModule} from '@angular/router';
+import {Dataset} from '../models/dataset-model';
+import {HttpClient} from '@angular/common/http';
 
 @Component({
   selector: 'app-sidebar',
@@ -14,25 +14,29 @@ import { HttpClient } from '@angular/common/http';
 export class Sidebar implements OnInit {
   isSidebarCollapsed = input.required<boolean>();
   changeIsSidebarCollapsed = output<boolean>();
+  // Emits alerts to the parent (App)
+  notify = output<{ type: 'info' | 'error' | 'success'; message: string }>();
 
-  items: { routeLink: string; icon: string; label: string }[] = [];
 
-  constructor(private readonly http: HttpClient) {}
+  constructor(private readonly http: HttpClient) {
+  }
 
   ngOnInit(): void {
     this.loadDatasets();
   }
 
+  // Default item
+  readonly defaultItem = {
+    routeLink: '/datasets/new',
+    icon: 'fal fa-star',
+    label: 'Add Dataset',
+  };
+
+  items: { routeLink: string; icon: string; label: string }[] = [this.defaultItem];
+
   loadDatasets(): void {
     this.http.get<Dataset[]>('http://localhost:8080/datasets').subscribe({
       next: (datasets) => {
-        // Default item
-        const defaultItem = {
-          routeLink: '/datasets/new',
-          icon: 'fal fa-star',
-          label: 'Add Dataset',
-        };
-
         // Map API datasets
         const datasetItems = datasets.map((dataset) => ({
           routeLink: `/datasets/${dataset.id}/`,
@@ -40,11 +44,11 @@ export class Sidebar implements OnInit {
           label: dataset.name,
         }));
 
-        // Combine default + loaded items
-        this.items = [defaultItem, ...datasetItems];
+        this.items = [this.defaultItem, ...datasetItems];
       },
       error: (err) => {
         console.error('Failed to load datasets', err);
+        this.notify.emit({type: 'error', message: 'Failed to load datasets. Please try again later.'});
       },
     });
   }

@@ -1,9 +1,17 @@
 <app-sidebar
   [isSidebarCollapsed]="isSidebarCollapsed()"
   (changeIsSidebarCollapsed)="changeIsSidebarCollapsed($event)"
+  (notify)="onNotify($event)"
 />
 
 <app-main-content
   [isSidebarCollapsed]="isSidebarCollapsed()"
   [screenWidth]="screenWidth()"
+/>
+
+<app-alert
+  [show]="showAlert()"
+  [alertType]="alertType()"
+  [alertMessage]="alertMessage()"
+  (closed)="onAlertClosed()"
 />

@@ -1,0 +1,8 @@
+@if (show) {
+  <div class="alert-container" [ngClass]="{'info': alertType === 'info', 'error': alertType === 'error'}">
+    <div class="alert-content">
+      <span class="alert-message">{{ alertMessage }}</span>
+      <button class="alert-close" (click)="onCloseClick()" aria-label="Close">×</button>
+    </div>
+  </div>
+}
