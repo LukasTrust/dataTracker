@@ -70,27 +70,31 @@
 
     <!-- Graph tab -->
     <div class="chart-container" *ngIf="activeTab() === 'graph'">
-      <div *ngIf="graphLoading()">Loading graph...</div>
+      <ng-container *ngIf="graphLoading(); else graphContent">
+        Loading graph...
+      </ng-container>
 
-      <div *ngIf="!graphLoading() && chartData.length">
-        <div class="chart-wrapper">
-          <ngx-charts-line-chart
-            [scheme]="colorScheme"
-            [results]="chartData"
-            [xAxis]="true"
-            [yAxis]="true"
-            [legend]="true"
-            [legendPosition]=LegendPosition.Below
-            [showXAxisLabel]="true"
-            [showYAxisLabel]="true"
-            [xAxisLabel]="'Date'"
-            [yAxisLabel]="'Value ' + (datasetSymbol ? '(' + datasetSymbol + ')' : '')"
-            [autoScale]="true"
-            [timeline]="true">
-          </ngx-charts-line-chart>
+      <ng-template #graphContent>
+        <div *ngIf="chartData.length; else noData">
+          <div class="chart-wrapper">
+            <ngx-charts-line-chart
+              [scheme]="colorScheme"
+              [results]="chartData"
+              [xAxis]="true"
+              [yAxis]="true"
+              [legend]="true"
+              [legendPosition]="LegendPosition.Below"
+              [showXAxisLabel]="true"
+              [showYAxisLabel]="true"
+              [xAxisLabel]="'Date'"
+              [yAxisLabel]="'Value ' + (datasetSymbol ? '(' + datasetSymbol + ')' : '')"
+              [autoScale]="true"
+              [timeline]="true">
+            </ngx-charts-line-chart>
+          </div>
         </div>
-      </div>
-      <div *ngIf="!graphLoading() && chartData.length === 0">No data to display.</div>
+        <ng-template #noData>No data to display.</ng-template>
+      </ng-template>
     </div>
 
     <!-- Edit tab: reuse DatasetForm -->

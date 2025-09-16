@@ -1,19 +1,20 @@
 .chart-container {
   display: flex;
-  height: 75vh;
   flex-direction: column;
   justify-content: center;
+  height: 75vh;
   background: linear-gradient(180deg, #ffffff 0%, #f9f5ff 100%);
   border: 1px solid #e5d9ff;
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-sm);
+  padding: var(--space-3);
 }
 
 .chart-wrapper {
-  margin: var(--space-3);
+  flex: 1;
 }
 
-/* ngx-charts overrides (optional) */
+/* ngx-charts overrides */
 ngx-charts-line-chart text {
   font-size: 12px;
   fill: #444;

@@ -155,13 +155,20 @@ export class DatasetEntries implements OnInit, OnDestroy {
 
   loadGraph(type: 'actual' | 'target' | 'endDate' = this.graphType()): void {
     if (!this.datasetId) return;
-    this.graphLoading.set(true);
-    const base = `/datasets/${this.datasetId}/entries`;
-    const url = type === 'actual' ? base : type === 'target' ? `${base}/projected/target` : `${base}/projected/endDate`;
 
-    this.api.get<Entry[]>(url).subscribe({
+    this.graphLoading.set(true);
+
+    const urlMap = {
+      actual: `/datasets/${this.datasetId}/entries`,
+      target: `/datasets/${this.datasetId}/entries/projected/target`,
+      endDate: `/datasets/${this.datasetId}/entries/projected/endDate`,
+    };
+
+    this.api.get<Entry[]>(urlMap[type]).subscribe({
       next: (rows) => {
-        this.graphEntries = (rows || []).slice().sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+        this.graphEntries = (rows || [])
+          .slice()
+          .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
         this.prepareChartData();
       },
       error: () => this.ui.showAlert('error', 'Failed to load graph data.'),
