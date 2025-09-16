@@ -39,7 +39,7 @@ export class Sidebar implements OnInit {
       next: (datasets) => {
         // Map API datasets
         const datasetItems = datasets.map((dataset) => ({
-          routeLink: `/datasets/${dataset.id}/edit`,
+          routeLink: `/datasets/${dataset.id}`,
           icon: 'fal fa-database',
           label: dataset.name,
         }));

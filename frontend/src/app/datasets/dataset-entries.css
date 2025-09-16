@@ -1,0 +1,27 @@
+.tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.tab {
+  border: 1px solid #ccc;
+  background: #f7f7f7;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+.tab.active {
+  background: #e0ecff;
+  border-color: #7aa0ff;
+}
+
+.entries-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.entries-table th, .entries-table td {
+  border: 1px solid #ddd;
+  padding: 6px;
+}
+.entries-table th {
+  background: #fafafa;
+}

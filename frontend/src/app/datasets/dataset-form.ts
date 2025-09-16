@@ -1,9 +1,10 @@
-import {Component, OnInit, signal} from '@angular/core';
+import {Component, OnInit, signal, OnDestroy} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {ActivatedRoute, Router, RouterModule} from '@angular/router';
 import {HttpClient} from '@angular/common/http';
 import { UiEventsService } from '../services/ui-events.service';
+import { Subscription } from 'rxjs';
 
 interface DatasetDto {
   id?: number;
@@ -22,11 +23,13 @@ interface DatasetDto {
   templateUrl: './dataset-form.html',
   styleUrl: './dataset-form.css'
 })
-export class DatasetForm implements OnInit {
+export class DatasetForm implements OnInit, OnDestroy {
   form!: FormGroup;
   isEditMode = signal<boolean>(false);
   datasetId: number | null = null;
   loading = signal<boolean>(false);
+
+  private sub?: Subscription;
 
   constructor(
     private readonly fb: FormBuilder,
@@ -46,12 +49,18 @@ export class DatasetForm implements OnInit {
       endDate: [null as string | null],   // yyyy-MM-dd
     });
 
-    const idParam = this.route.snapshot.paramMap.get('id');
-    if (idParam) {
-      this.isEditMode.set(true);
-      this.datasetId = Number(idParam);
-      this.fetchDataset(this.datasetId);
-    }
+    this.sub = this.route.paramMap.subscribe((pm) => {
+      const idParam = pm.get('id');
+      if (idParam) {
+        this.isEditMode.set(true);
+        this.datasetId = Number(idParam);
+        this.fetchDataset(this.datasetId);
+      } else {
+        this.isEditMode.set(false);
+        this.datasetId = null;
+        this.form.reset({ name: '', description: '', symbol: '', targetValue: null, startDate: null, endDate: null });
+      }
+    });
   }
 
   private fetchDataset(id: number): void {
@@ -92,8 +101,8 @@ export class DatasetForm implements OnInit {
         next: () => {
           this.ui.showAlert('success', 'Dataset updated successfully.');
           this.ui.requestSidebarRefresh();
-          // Stay on edit page (or navigate to it to ensure correct route)
-          this.router.navigateByUrl(`/datasets/${this.datasetId}/edit`).catch(() => this.router.navigateByUrl('/'));
+          // Navigate back to the tabbed view (DatasetEntries)
+          this.router.navigateByUrl(`/datasets/${this.datasetId}`).catch(() => this.router.navigateByUrl('/'));
         },
         error: (err) => {
           console.error('Failed to update dataset', err);
@@ -108,7 +117,7 @@ export class DatasetForm implements OnInit {
           const newId = (res && typeof res === 'object' && 'id' in res) ? Number((res as any).id) : null;
           this.ui.requestSidebarRefresh();
           if (newId) {
-            this.router.navigateByUrl(`/datasets/${newId}/edit`).catch(() => this.router.navigateByUrl('/'));
+            this.router.navigateByUrl(`/datasets/${newId}`).catch(() => this.router.navigateByUrl('/'));
           } else {
             this.router.navigateByUrl('/');
           }
@@ -155,5 +164,9 @@ export class DatasetForm implements OnInit {
     } catch {
       return value;
     }
+  }
+
+  ngOnDestroy(): void {
+    this.sub?.unsubscribe();
   }
 }

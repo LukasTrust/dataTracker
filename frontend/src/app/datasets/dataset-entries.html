@@ -1,0 +1,60 @@
+<div class="container">
+  <h2>Dataset</h2>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button type="button" class="tab" [class.active]="activeTab() === 'data'" (click)="activeTab.set('data')">Data</button>
+    <button type="button" class="tab" [class.active]="activeTab() === 'edit'" (click)="activeTab.set('edit')">Edit</button>
+  </div>
+
+  <!-- Data tab: Entries table -->
+  <div *ngIf="activeTab() === 'data'">
+    <h3>Entries</h3>
+    <table class="entries-table">
+      <thead>
+      <tr>
+        <th style="width: 120px;">Value</th>
+        <th>Label</th>
+        <th style="width: 160px;">Date</th>
+        <th style="width: 180px;">Actions</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr>
+        <td>
+          <input type="number" [(ngModel)]="newEntry.value" placeholder="Value" />
+        </td>
+        <td>
+          <input type="text" [(ngModel)]="newEntry.label" placeholder="Label" />
+        </td>
+        <td>
+          <input type="date" [(ngModel)]="newEntry.date" />
+        </td>
+        <td>
+          <button type="button" (click)="addEntry()">Add</button>
+          <button type="button" (click)="newEntry = { value: null, label: '', date: '' }">Clear</button>
+        </td>
+      </tr>
+
+      <tr *ngFor="let e of entries">
+        <td><input type="number" [(ngModel)]="e.value" /></td>
+        <td><input type="text" [(ngModel)]="e.label" /></td>
+        <td><input type="date" [(ngModel)]="e.date" /></td>
+        <td>
+          <button type="button" (click)="saveEntry(e)">Save</button>
+          <button type="button" (click)="deleteEntry(e)">Delete</button>
+        </td>
+      </tr>
+
+      <tr *ngIf="entriesLoading()">
+        <td colspan="4">Loading entries...</td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Edit tab: reuse DatasetForm -->
+  <div *ngIf="activeTab() === 'edit'">
+    <app-dataset-form></app-dataset-form>
+  </div>
+</div>
