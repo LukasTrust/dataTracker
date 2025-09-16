@@ -29,9 +29,9 @@ func dbSetup() (*sql.DB, error) {
 		return nil, err
 	}
 
-	if mErr := migrations.Down(db); mErr != nil {
-		return nil, mErr
-	}
+	//if mErr := migrations.Down(db); mErr != nil {
+	//	return nil, mErr
+	//}
 	if mErr := migrations.Up(db); mErr != nil {
 		return nil, mErr
 	}
@@ -72,6 +72,23 @@ func httpSetup(db *sql.DB) error {
 	r.HandleFunc(routeEntries+routeID, h.UpdateEntryHandler).Methods(http.MethodPut)
 	r.HandleFunc(routeEntries+routeID, h.DeleteEntryHandler).Methods(http.MethodDelete)
 
+	// Wrap the router with CORS middleware
+	corsRouter := enableCors(r)
+
 	utils.Success(fmt.Sprintf("Server starting on port %s", port))
-	return http.ListenAndServe(port, r)
+	return http.ListenAndServe(port, corsRouter)
+}
+
+// enableCors enables CORS for all routes
+func enableCors(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:4200")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
 }

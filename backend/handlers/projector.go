@@ -1,14 +1,14 @@
 package handlers
 
 import (
-	"backend/database"
+	"backend/models"
 	"sort"
 	"time"
 )
 
 // ProjectUntilTarget keeps projecting until targetValue is reached.
 // Stops at 0 if avgChange overshoot into negative values forever.
-func ProjectUntilTarget(dataset database.Dataset, entries []database.Entry) []database.Entry {
+func ProjectUntilTarget(dataset models.Dataset, entries []models.Entry) []models.Entry {
 	if dataset.TargetValue == nil || len(entries) < 2 {
 		return entries
 	}
@@ -26,7 +26,7 @@ func ProjectUntilTarget(dataset database.Dataset, entries []database.Entry) []da
 }
 
 // ProjectUntilEndDate projects until dataset.EndDate (if present)
-func ProjectUntilEndDate(dataset database.Dataset, entries []database.Entry) []database.Entry {
+func ProjectUntilEndDate(dataset models.Dataset, entries []models.Entry) []models.Entry {
 	if dataset.EndDate == nil || len(entries) < 2 {
 		return entries
 	}
@@ -41,16 +41,16 @@ func ProjectUntilEndDate(dataset database.Dataset, entries []database.Entry) []d
 }
 
 // sortEntriesByDate returns a sorted copy of entries by Date
-func sortEntriesByDate(entries []database.Entry) []database.Entry {
-	sorted := make([]database.Entry, len(entries))
+func sortEntriesByDate(entries []models.Entry) []models.Entry {
+	sorted := make([]models.Entry, len(entries))
 	copy(sorted, entries)
 	sort.Slice(sorted, func(i, j int) bool { return sorted[i].Date.Before(sorted[j].Date) })
 	return sorted
 }
 
 // appendProjectionsUntilTarget appends projected entries until targetValue is reached
-func appendProjectionsUntilTarget(datasetID int, wrapped []database.Entry, last database.Entry,
-	avgChange float64, avgStep time.Duration, target float64) []database.Entry {
+func appendProjectionsUntilTarget(datasetID int, wrapped []models.Entry, last models.Entry,
+	avgChange float64, avgStep time.Duration, target float64) []models.Entry {
 	value := last.Value
 	nextDate := last.Date.Add(avgStep)
 
@@ -64,7 +64,7 @@ func appendProjectionsUntilTarget(datasetID int, wrapped []database.Entry, last 
 			value = 0
 		}
 
-		wrapped = append(wrapped, database.Entry{
+		wrapped = append(wrapped, models.Entry{
 			Id:        0,
 			DatasetId: datasetID,
 			Value:     value,
@@ -79,14 +79,14 @@ func appendProjectionsUntilTarget(datasetID int, wrapped []database.Entry, last 
 }
 
 // appendProjectionsUntilEndDate appends projected entries until endDate is reached
-func appendProjectionsUntilEndDate(datasetID int, wrapped []database.Entry, last database.Entry,
-	avgChange float64, avgStep time.Duration, endDate time.Time) []database.Entry {
+func appendProjectionsUntilEndDate(datasetID int, wrapped []models.Entry, last models.Entry,
+	avgChange float64, avgStep time.Duration, endDate time.Time) []models.Entry {
 	value := last.Value
 	nextDate := last.Date.Add(avgStep)
 
 	for !nextDate.After(endDate) {
 		value += avgChange
-		wrapped = append(wrapped, database.Entry{
+		wrapped = append(wrapped, models.Entry{
 			Id:        0,
 			DatasetId: datasetID,
 			Value:     value,
@@ -101,7 +101,7 @@ func appendProjectionsUntilEndDate(datasetID int, wrapped []database.Entry, last
 }
 
 // calcAverageChange computes the avg value delta and avg time step
-func calcAverageChange(entries []database.Entry) (float64, time.Duration) {
+func calcAverageChange(entries []models.Entry) (float64, time.Duration) {
 	if len(entries) < 2 {
 		return 0, 0
 	}

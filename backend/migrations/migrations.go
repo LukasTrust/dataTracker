@@ -93,6 +93,7 @@ var CreateDatasetsAndEntries = []string{
 	    id SERIAL PRIMARY KEY,
 	    name TEXT NOT NULL,
 	    description TEXT,
+	    symbol TEXT,
 	    target_value NUMERIC(15,2),
 	    start_date DATE,
 	    end_date DATE

@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"backend/database"
+	"backend/models"
 	"backend/utils"
 	"database/sql"
 	"encoding/json"
@@ -28,7 +29,7 @@ type Handler struct {
 }
 
 func (h *Handler) CreateDatasetHandler(w http.ResponseWriter, r *http.Request) {
-	var d database.Dataset
+	var d models.Dataset
 	if err := decodeJSON(r, &d); err != nil {
 		handleError(w, err, "")
 		return
@@ -69,7 +70,7 @@ func (h *Handler) UpdateDatasetHandler(w http.ResponseWriter, r *http.Request) {
 		handleError(w, err, "")
 		return
 	}
-	var d database.Dataset
+	var d models.Dataset
 	if err := decodeJSON(r, &d); err != nil {
 		handleError(w, err, "")
 		return
@@ -101,7 +102,7 @@ func (h *Handler) CreateEntryHandler(w http.ResponseWriter, r *http.Request) {
 		handleError(w, err, "")
 		return
 	}
-	var e database.Entry
+	var e models.Entry
 	if err := decodeJSON(r, &e); err != nil {
 		handleError(w, err, "")
 		return
@@ -135,7 +136,7 @@ func (h *Handler) UpdateEntryHandler(w http.ResponseWriter, r *http.Request) {
 		handleError(w, err, "")
 		return
 	}
-	var e database.Entry
+	var e models.Entry
 	if err := decodeJSON(r, &e); err != nil {
 		handleError(w, err, "")
 		return
@@ -170,7 +171,7 @@ func (h *Handler) ProjectedUntilEndDateHandler(w http.ResponseWriter, r *http.Re
 }
 
 // projectEntries is a generic helper for projections
-func (h *Handler) projectEntries(w http.ResponseWriter, r *http.Request, projector func(database.Dataset, []database.Entry) []database.Entry,
+func (h *Handler) projectEntries(w http.ResponseWriter, r *http.Request, projector func(models.Dataset, []models.Entry) []models.Entry,
 ) {
 	datasetId, err := parseID(r, datasetId, invalidDatasetId)
 	if err != nil {
