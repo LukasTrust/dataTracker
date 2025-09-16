@@ -88,6 +88,15 @@ export class DatasetForm implements OnInit, OnDestroy {
     });
   }
 
+  openPicker(event: Event): void {
+    const input = event.target as HTMLInputElement | null;
+    if (input && typeof (input as any).showPicker === 'function') {
+      try { (input as any).showPicker(); } catch {}
+    } else {
+      input?.focus();
+    }
+  }
+
   submit(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();

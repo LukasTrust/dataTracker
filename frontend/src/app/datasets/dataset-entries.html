@@ -1,149 +1,165 @@
 <div class="container">
-  <h2>Dataset</h2>
+  <div>
+    <h2><i class="fas fa-database"></i> Dataset</h2>
 
-  <!-- Tabs: Data | Graph variants | Edit -->
-  <div class="tabs">
-    <button type="button" class="tab" [class.active]="activeTab() === 'data'" (click)="activeTab.set('data')">Data
-    </button>
-    <button type="button" class="tab" [class.active]="activeTab() === 'graph' && graphType() === 'actual'"
-            (click)="setGraphType('actual')">Graph: Actual
-    </button>
-    <button type="button" class="tab" [class.active]="activeTab() === 'graph' && graphType() === 'target'"
-            (click)="setGraphType('target')">Graph: Target
-    </button>
-    <button type="button" class="tab" [class.active]="activeTab() === 'graph' && graphType() === 'endDate'"
-            (click)="setGraphType('endDate')">Graph: End Date
-    </button>
-    <button type="button" class="tab" [class.active]="activeTab() === 'edit'" (click)="activeTab.set('edit')">Edit
-    </button>
-  </div>
+    <!-- Tabs: Data | Graph variants | Edit -->
+    <div class="tabs">
+      <button type="button" class="tab" [class.active]="activeTab() === 'data'" (click)="activeTab.set('data')">
+        <i class="fas fa-table"></i> Data
+      </button>
+      <button type="button" class="tab" [class.active]="activeTab() === 'graph' && graphType() === 'actual'"
+              (click)="setGraphType('actual')">
+        <i class="fas fa-chart-line"></i> Graph: Actual
+      </button>
+      <button type="button" class="tab" [class.active]="activeTab() === 'graph' && graphType() === 'target'"
+              (click)="setGraphType('target')">
+        <i class="fas fa-bullseye"></i> Graph: Target
+      </button>
+      <button type="button" class="tab" [class.active]="activeTab() === 'graph' && graphType() === 'endDate'"
+              (click)="setGraphType('endDate')">
+        <i class="fas fa-calendar-alt"></i> Graph: End Date
+      </button>
+      <button type="button" class="tab" [class.active]="activeTab() === 'edit'" (click)="activeTab.set('edit')">
+        <i class="fas fa-pen"></i> Edit
+      </button>
+    </div>
 
-  <!-- Data tab: Entries table -->
-  <div *ngIf="activeTab() === 'data'">
-    <h3>Entries</h3>
-    <table class="entries-table">
-      <thead>
-      <tr>
-        <th style="width: 120px;">Value</th>
-        <th>Label</th>
-        <th style="width: 160px;">Date</th>
-        <th style="width: 180px;">Actions</th>
-      </tr>
-      </thead>
-      <tbody>
-      <tr>
-        <td>
-          <input type="number" [(ngModel)]="newEntry.value" placeholder="Value"/>
-        </td>
-        <td>
-          <input type="text" [(ngModel)]="newEntry.label" placeholder="Label"/>
-        </td>
-        <td>
-          <input type="date" [(ngModel)]="newEntry.date"/>
-        </td>
-        <td>
-          <button type="button" (click)="addEntry()">Add</button>
-          <button type="button" (click)="newEntry = { value: null, label: '', date: '' }">Clear</button>
-        </td>
-      </tr>
+    <!-- Data tab: Entries table -->
+    <div *ngIf="activeTab() === 'data'">
+      <h3>Entries</h3>
+      <table class="table">
+        <thead>
+        <tr>
+          <th style="width: 120px;">Value</th>
+          <th>Label</th>
+          <th style="width: 160px;">Date</th>
+          <th style="width: 220px;">Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+          <td>
+            <input type="number" [(ngModel)]="newEntry.value" placeholder="Value"/>
+          </td>
+          <td>
+            <input type="text" [(ngModel)]="newEntry.label" placeholder="Label"/>
+          </td>
+          <td>
+            <input type="date" [(ngModel)]="newEntry.date" (click)="openPicker($event)"/>
+          </td>
+          <td>
+            <button class="btn btn-primary" type="button" (click)="addEntry()"><i class="fas fa-plus"></i> Add</button>
+            <button class="btn btn-secondary" type="button" (click)="newEntry = { value: null, label: '', date: '' }"><i class="fas fa-broom"></i> Clear</button>
+          </td>
+        </tr>
 
-      <tr *ngFor="let e of entries">
-        <td><input type="number" [(ngModel)]="e.value"/></td>
-        <td><input type="text" [(ngModel)]="e.label"/></td>
-        <td><input type="date" [(ngModel)]="e.date"/></td>
-        <td>
-          <button type="button" (click)="saveEntry(e)">Save</button>
-          <button type="button" (click)="deleteEntry(e)">Delete</button>
-        </td>
-      </tr>
+        <tr *ngFor="let e of entries">
+          <td><input type="number" [(ngModel)]="e.value"/></td>
+          <td><input type="text" [(ngModel)]="e.label"/></td>
+          <td><input type="date" [(ngModel)]="e.date" (click)="openPicker($event)"/></td>
+          <td>
+            <button class="btn btn-primary" type="button" (click)="saveEntry(e)"><i class="fas fa-save"></i> Save</button>
+            <button class="btn btn-danger" type="button" (click)="deleteEntry(e)"><i class="fas fa-trash-alt"></i> Delete</button>
+          </td>
+        </tr>
 
-      <tr *ngIf="entriesLoading()">
-        <td colspan="4">Loading entries...</td>
-      </tr>
-      </tbody>
-    </table>
-  </div>
+        <tr *ngIf="entriesLoading()">
+          <td colspan="4">Loading entries...</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
 
-  <!-- Graph tab -->
-  <div *ngIf="activeTab() === 'graph'">
-    <div *ngIf="graphLoading()">Loading graph...</div>
-    <div *ngIf="!graphLoading()">
-      <svg [attr.width]="graphViewBox.width" [attr.height]="graphViewBox.height" class="chart">
-        <!-- Gridlines and axes -->
-        <g class="gridlines-x">
-          <line *ngFor="let t of xTicks" [attr.x1]="t.x" [attr.x2]="t.x"
-                [attr.y1]="graphViewBox.padding" [attr.y2]="graphViewBox.height - graphViewBox.padding" stroke="#eee"/>
-        </g>
-        <g class="gridlines-y">
-          <line *ngFor="let t of yTicks" [attr.x1]="graphViewBox.padding"
+    <!-- Graph tab -->
+    <div *ngIf="activeTab() === 'graph'">
+      <div *ngIf="graphLoading()">Loading graph...</div>
+      <div *ngIf="!graphLoading()">
+        <svg [attr.width]="graphViewBox.width" [attr.height]="graphViewBox.height" class="chart">
+          <defs>
+            <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2.2" result="coloredBlur"/>
+              <feMerge>
+                <feMergeNode in="coloredBlur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+          </defs>
+          <!-- Gridlines and axes -->
+          <g class="gridlines-x">
+            <line *ngFor="let t of xTicks" [attr.x1]="t.x" [attr.x2]="t.x"
+                  [attr.y1]="graphViewBox.padding" [attr.y2]="graphViewBox.height - graphViewBox.padding" stroke="#eee"/>
+          </g>
+          <g class="gridlines-y">
+            <line *ngFor="let t of yTicks" [attr.x1]="graphViewBox.padding"
+                  [attr.x2]="graphViewBox.width - graphViewBox.padding"
+                  [attr.y1]="t.y" [attr.y2]="t.y" stroke="#eee"/>
+          </g>
+          <line [attr.x1]="graphViewBox.padding" [attr.y1]="graphViewBox.height - graphViewBox.padding"
                 [attr.x2]="graphViewBox.width - graphViewBox.padding"
-                [attr.y1]="t.y" [attr.y2]="t.y" stroke="#eee"/>
-        </g>
-        <line [attr.x1]="graphViewBox.padding" [attr.y1]="graphViewBox.height - graphViewBox.padding"
-              [attr.x2]="graphViewBox.width - graphViewBox.padding"
-              [attr.y2]="graphViewBox.height - graphViewBox.padding"
-              stroke="#999"/>
-        <line [attr.x1]="graphViewBox.padding" [attr.y1]="graphViewBox.padding"
-              [attr.x2]="graphViewBox.padding" [attr.y2]="graphViewBox.height - graphViewBox.padding"
-              stroke="#999"/>
+                [attr.y2]="graphViewBox.height - graphViewBox.padding"
+                stroke="#999"/>
+          <line [attr.x1]="graphViewBox.padding" [attr.y1]="graphViewBox.padding"
+                [attr.x2]="graphViewBox.padding" [attr.y2]="graphViewBox.height - graphViewBox.padding"
+                stroke="#999"/>
 
-        <!-- Tick labels -->
-        <g class="x-ticks">
-          <text *ngFor="let t of xTicks" [attr.x]="t.x" [attr.y]="graphViewBox.height - graphViewBox.padding + 16"
-                text-anchor="middle">{{ t.label }}
+          <!-- Tick labels -->
+          <g class="x-ticks">
+            <text *ngFor="let t of xTicks" [attr.x]="t.x" [attr.y]="graphViewBox.height - graphViewBox.padding + 16"
+                  text-anchor="middle">{{ t.label }}
+            </text>
+          </g>
+          <g class="y-ticks">
+            <text *ngFor="let t of yTicks" [attr.x]="graphViewBox.padding - 8" [attr.y]="t.y + 4"
+                  text-anchor="end">{{ t.label }}
+            </text>
+          </g>
+          <!-- Axis labels -->
+          <text class="axis-label" [attr.x]="graphViewBox.width / 2" [attr.y]="graphViewBox.height - 6"
+                text-anchor="middle">Date
           </text>
-        </g>
-        <g class="y-ticks">
-          <text *ngFor="let t of yTicks" [attr.x]="graphViewBox.padding - 8" [attr.y]="t.y + 4"
-                text-anchor="end">{{ t.label }}
+          <text
+            class="axis-label"
+            [attr.x]="16"
+            [attr.y]="graphViewBox.height / 2"
+            [attr.transform]="'rotate(-90 16,' + (graphViewBox.height / 2) + ')'"
+            text-anchor="middle">
+            Value {{ datasetSymbol ? '(' + datasetSymbol + ')' : '' }}
           </text>
-        </g>
-        <!-- Axis labels -->
-        <text class="axis-label" [attr.x]="graphViewBox.width / 2" [attr.y]="graphViewBox.height - 6"
-              text-anchor="middle">Date
-        </text>
-        <text
-          class="axis-label"
-          [attr.x]="16"
-          [attr.y]="graphViewBox.height / 2"
-          [attr.transform]="'rotate(-90 16,' + (graphViewBox.height / 2) + ')'"
-          text-anchor="middle">
-          Value {{ datasetSymbol ? '(' + datasetSymbol + ')' : '' }}
-        </text>
 
-        <!-- Data lines -->
-        <polyline *ngIf="graphRealPolyline" [attr.points]="graphRealPolyline" fill="none" stroke="#1976d2"
-                  stroke-width="2"/>
-        <polyline *ngIf="graphProjectedPolyline" [attr.points]="graphProjectedPolyline" fill="none" stroke="#9c27b0"
-                  stroke-width="2" stroke-dasharray="5,5"/>
+          <!-- Data lines -->
+          <polyline *ngIf="graphRealPolyline" [attr.points]="graphRealPolyline" fill="none" stroke="#1976d2"
+                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)"/>
+          <polyline *ngIf="graphProjectedPolyline" [attr.points]="graphProjectedPolyline" fill="none" stroke="#9c27b0"
+                    stroke-width="2.5" stroke-dasharray="6,6" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)"/>
 
-        <!-- Points with hover -->
-        <g *ngFor="let p of graphPoints">
-          <circle [attr.cx]="p.x" [attr.cy]="p.y" r="4" [attr.fill]="p.projected ? '#9c27b0' : '#1976d2'"
-                  (mouseenter)="showTip($event, p)" (mousemove)="moveTip($event)" (mouseleave)="hideTip()"/>
-        </g>
+          <!-- Points with hover -->
+          <g *ngFor="let p of graphPoints">
+            <circle [attr.cx]="p.x" [attr.cy]="p.y" r="4" [attr.fill]="p.projected ? '#9c27b0' : '#1976d2'" stroke="#fff" stroke-width="1.5" filter="url(#glow)"
+                    (mouseenter)="showTip($event, p)" (mousemove)="moveTip($event)" (mouseleave)="hideTip()"/>
+          </g>
 
-        <!-- Legend -->
-        <g class="legend">
-          <rect x="10" y="10" width="14" height="2" fill="none" stroke="#1976d2" stroke-width="2"></rect>
-          <text x="30" y="14" font-size="12">Actual</text>
-          <rect x="90" y="10" width="14" height="2" fill="none" stroke="#9c27b0" stroke-width="2"
-                stroke-dasharray="5,5"></rect>
-          <text x="112" y="14" font-size="12">Projected</text>
-        </g>
-      </svg>
-      <div *ngIf="graphPoints.length === 0">No data to display.</div>
-      <div class="graph-hint">Y-axis: value {{ datasetSymbol ? '(' + datasetSymbol + ')' : '' }} · X-axis: date. Hover
-        points for details.
-      </div>
-      <div class="tooltip" *ngIf="tooltip.visible" [style.left.px]="tooltip.x"
-           [style.top.px]="tooltip.y">{{ tooltip.text }}
+          <!-- Legend -->
+          <g class="legend">
+            <rect x="10" y="10" width="14" height="2" fill="none" stroke="#1976d2" stroke-width="2"></rect>
+            <text x="30" y="14" font-size="12">Actual</text>
+            <rect x="90" y="10" width="14" height="2" fill="none" stroke="#9c27b0" stroke-width="2"
+                  stroke-dasharray="5,5"></rect>
+            <text x="112" y="14" font-size="12">Projected</text>
+          </g>
+        </svg>
+        <div *ngIf="graphPoints.length === 0">No data to display.</div>
+        <div class="graph-hint">Y-axis: value {{ datasetSymbol ? '(' + datasetSymbol + ')' : '' }} · X-axis: date. Hover
+          points for details.
+        </div>
+        <div class="tooltip" *ngIf="tooltip.visible" [style.left.px]="tooltip.x"
+             [style.top.px]="tooltip.y">{{ tooltip.text }}
+        </div>
       </div>
     </div>
-  </div>
 
-  <!-- Edit tab: reuse DatasetForm -->
-  <div *ngIf="activeTab() === 'edit'">
-    <app-dataset-form></app-dataset-form>
+    <!-- Edit tab: reuse DatasetForm -->
+    <div *ngIf="activeTab() === 'edit'">
+      <app-dataset-form></app-dataset-form>
+    </div>
   </div>
 </div>

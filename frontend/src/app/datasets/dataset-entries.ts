@@ -280,6 +280,15 @@ export class DatasetEntries implements OnInit, OnDestroy {
     this.yTicks = yTicks;
   }
 
+  openPicker(event: Event): void {
+    const input = event.target as HTMLInputElement | null;
+    if (input && typeof (input as any).showPicker === 'function') {
+      try { (input as any).showPicker(); } catch {}
+    } else {
+      input?.focus();
+    }
+  }
+
   // Tooltip handlers for SVG points
   showTip(evt: MouseEvent, p: { x: number; y: number; label: string; dateStr: string; value: number; projected?: boolean }): void {
     const margin = 12;
