@@ -1,6 +1,18 @@
 @if (show) {
-  <div class="alert-container" [ngClass]="{'info': alertType === 'info', 'error': alertType === 'error'}">
+  <div class="alert-container"
+       [ngClass]="{
+         'info': alertType === 'info',
+         'error': alertType === 'error',
+         'success': alertType === 'success'
+       }">
     <div class="alert-content">
+      <!-- Icon based on alert type -->
+      <span class="alert-icon">
+        <i *ngIf="alertType === 'info'" class="fa fa-info-circle"></i>
+        <i *ngIf="alertType === 'error'" class="fa fa-exclamation-triangle"></i>
+        <i *ngIf="alertType === 'success'" class="fa fa-check-circle"></i>
+      </span>
+
       <span class="alert-message">{{ alertMessage }}</span>
       <button class="alert-close" (click)="onCloseClick()" aria-label="Close">×</button>
     </div>

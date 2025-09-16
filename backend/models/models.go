@@ -7,7 +7,7 @@ type Dataset struct {
 	Name        string     `json:"name"`
 	Description string     `json:"description"`
 	Symbol      string     `json:"symbol"`
-	TargetValue *float64   `json:"target_value"`
+	TargetValue *float64   `json:"targetValue"`
 	StartDate   *time.Time `json:"start_date"`
 	EndDate     *time.Time `json:"end_date"`
 }

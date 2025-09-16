@@ -5,10 +5,10 @@ export type AlertType = 'info' | 'error' | 'success';
 
 @Injectable({ providedIn: 'root' })
 export class UiEventsService {
-  private alertSubject = new Subject<{ type: AlertType; message: string }>();
+  private readonly alertSubject = new Subject<{ type: AlertType; message: string }>();
   alert$ = this.alertSubject.asObservable();
 
-  private sidebarRefreshSubject = new Subject<void>();
+  private readonly sidebarRefreshSubject = new Subject<void>();
   sidebarRefresh$ = this.sidebarRefreshSubject.asObservable();
 
   showAlert(type: AlertType, message: string): void {
