@@ -9,10 +9,12 @@ import { Subscription } from 'rxjs';
 import { ApiService } from '../services/api.service';
 import { DateUtils } from '../services/date-utils';
 
+import {Color, LegendPosition, NgxChartsModule, ScaleType} from '@swimlane/ngx-charts';
+
 @Component({
   selector: 'app-dataset-entries',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule, DatasetForm],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule, DatasetForm, NgxChartsModule],
   templateUrl: './dataset-entries.html',
   styleUrl: './dataset-entries.css',
 })
@@ -33,14 +35,15 @@ export class DatasetEntries implements OnInit, OnDestroy {
   graphType = signal<'actual' | 'target' | 'endDate'>('actual');
   graphLoading = signal<boolean>(false);
   graphEntries: Entry[] = [];
-  graphViewBox = { width: 760, height: 360, padding: 48 };
-  graphRealPolyline = '';
-  graphProjectedPolyline = '';
-  graphPoints: { x: number; y: number; label: string; dateStr: string; value: number; projected?: boolean }[] = [];
-  xTicks: { x: number; label: string }[] = [];
-  yTicks: { y: number; label: string }[] = [];
 
-  tooltip = { visible: false, x: 0, y: 0, text: '' };
+  // ngx-charts data
+  chartData: { name: string; series: { name: string; value: number }[] }[] = [];
+  colorScheme: Color = {
+    name: 'datasetScheme',
+    selectable: true,
+    group: 'ordinal' as ScaleType,
+    domain: ['#1976d2', '#9c27b0']
+  };
 
   private sub?: Subscription;
 
@@ -51,9 +54,7 @@ export class DatasetEntries implements OnInit, OnDestroy {
     private readonly ui: UiEventsService,
   ) {}
 
-
   ngOnInit(): void {
-    // If URL contains a fragment like #edit, open the edit tab
     const hash = window.location.hash?.replace('#', '');
     if (hash === 'edit') this.activeTab.set('edit');
 
@@ -63,13 +64,12 @@ export class DatasetEntries implements OnInit, OnDestroy {
       if (this.datasetId) {
         this.loadEntries(this.datasetId);
         this.loadDatasetMeta(this.datasetId);
-        // default graph load
         this.loadGraph('actual');
       } else {
         this.entries = [];
         this.graphEntries = [];
         this.datasetSymbol = '';
-        this.updateGraphGeometry();
+        this.chartData = [];
       }
     });
   }
@@ -85,53 +85,40 @@ export class DatasetEntries implements OnInit, OnDestroy {
       next: (rows) => {
         this.entries = (rows || []).map((r) => ({ ...r, date: r.date ? DateUtils.toDateInputValue(r.date as any) : '' }));
       },
-      error: (err) => {
-        console.error('Failed to load entries', err);
-        this.ui.showAlert('error', 'Failed to load entries.');
-      },
+      error: (err) => this.ui.showAlert('error', 'Failed to load entries.'),
       complete: () => this.entriesLoading.set(false),
     });
   }
 
   addEntry(): void {
-    if (this.datasetId === null) return;
+    if (!this.datasetId) return;
     const value = this.newEntry.value;
     const label = (this.newEntry.label || '').trim();
     const date = (this.newEntry.date || '').trim();
-    if (value === null || value === undefined || label === '' || date === '') {
+    if (value == null || label === '' || date === '') {
       this.ui.showAlert('info', 'Please fill value, label, and date.');
       return;
     }
 
-    const payload = {
-      value: Number(value),
-      label,
-      date: DateUtils.toISOString(date)  // normalized for backend
-    } as any;
+    const payload = { value: Number(value), label, date: DateUtils.toISOString(date) };
 
-    this.api
-      .post<Entry | any>(`/datasets/${this.datasetId}/entries`, payload)
-      .subscribe({
-        next: (res) => {
-          this.ui.showAlert('success', 'Entry created.');
-          if (res && typeof res === 'object' && 'id' in res) {
-            const created = res as Entry;
-            created.date = created.date ? DateUtils.toDateInputValue(created.date as any) : '';
-            this.entries = [created, ...this.entries];
-          } else {
-            this.loadEntries(this.datasetId!);
-          }
-          this.resetNewEntry();
-        },
-        error: (err) => {
-          console.error('Failed to create entry', err);
-          this.ui.showAlert('error', 'Failed to create entry.');
-        },
-      });
+    this.api.post<Entry>(`/datasets/${this.datasetId}/entries`, payload).subscribe({
+      next: (res) => {
+        this.ui.showAlert('success', 'Entry created.');
+        if (res?.id) {
+          res.date = res.date ? DateUtils.toDateInputValue(res.date as any) : '';
+          this.entries = [res, ...this.entries];
+        } else {
+          this.loadEntries(this.datasetId!);
+        }
+        this.resetNewEntry();
+      },
+      error: () => this.ui.showAlert('error', 'Failed to create entry.'),
+    });
   }
 
   saveEntry(entry: Entry): void {
-    const id = entry.id;
+    if (!this.datasetId) return;
     const payload = {
       id: entry.id,
       datasetId: this.datasetId,
@@ -139,30 +126,23 @@ export class DatasetEntries implements OnInit, OnDestroy {
       label: (entry.label || '').trim(),
       date: DateUtils.toISOString(entry.date),
     };
-    this.api.put(`/entries/${id}`, payload).subscribe({
+    this.api.put(`/entries/${entry.id}`, payload).subscribe({
       next: () => this.ui.showAlert('success', 'Entry updated.'),
-      error: (err) => {
-        console.error('Failed to update entry', err);
-        this.ui.showAlert('error', 'Failed to update entry.');
-      },
+      error: () => this.ui.showAlert('error', 'Failed to update entry.'),
     });
   }
 
   deleteEntry(entry: Entry): void {
-    const id = entry.id;
-    this.api.delete(`/entries/${id}`).subscribe({
+    this.api.delete(`/entries/${entry.id}`).subscribe({
       next: () => {
         this.ui.showAlert('success', 'Entry deleted.');
-        this.entries = this.entries.filter((e) => e.id !== id);
+        this.entries = this.entries.filter((e) => e.id !== entry.id);
       },
-      error: (err) => {
-        console.error('Failed to delete entry', err);
-        this.ui.showAlert('error', 'Failed to delete entry.');
-      },
+      error: () => this.ui.showAlert('error', 'Failed to delete entry.'),
     });
   }
 
-  private resetNewEntry(): void {
+  protected resetNewEntry(): void {
     this.newEntry = { value: null, label: '', date: '' };
   }
 
@@ -174,19 +154,17 @@ export class DatasetEntries implements OnInit, OnDestroy {
   }
 
   loadGraph(type: 'actual' | 'target' | 'endDate' = this.graphType()): void {
-    if (this.datasetId === null) return;
+    if (!this.datasetId) return;
     this.graphLoading.set(true);
     const base = `/datasets/${this.datasetId}/entries`;
     const url = type === 'actual' ? base : type === 'target' ? `${base}/projected/target` : `${base}/projected/endDate`;
+
     this.api.get<Entry[]>(url).subscribe({
       next: (rows) => {
         this.graphEntries = (rows || []).slice().sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-        this.updateGraphGeometry();
+        this.prepareChartData();
       },
-      error: (err) => {
-        console.error('Failed to load graph data', err);
-        this.ui.showAlert('error', 'Failed to load graph data.');
-      },
+      error: () => this.ui.showAlert('error', 'Failed to load graph data.'),
       complete: () => this.graphLoading.set(false),
     });
   }
@@ -194,90 +172,25 @@ export class DatasetEntries implements OnInit, OnDestroy {
   private loadDatasetMeta(id: number): void {
     this.api.get<any>(`/datasets/${id}`).subscribe({
       next: (d) => {
-        this.datasetSymbol = (d && typeof d === 'object' && 'symbol' in d) ? String((d as any).symbol ?? '') : '';
+        this.datasetSymbol = d?.symbol ?? '';
       },
-      error: (err) => {
-        console.error('Failed to load dataset meta', err);
-        this.ui.showAlert('error', 'Failed to load dataset details.');
-      },
+      error: () => this.ui.showAlert('error', 'Failed to load dataset details.'),
     });
   }
 
-  private updateGraphGeometry(): void {
-    const w = this.graphViewBox.width;
-    const h = this.graphViewBox.height;
-    const p = this.graphViewBox.padding;
-    const innerW = w - p * 2;
-    const innerH = h - p * 2;
+  private prepareChartData(): void {
+    const actualSeries = this.graphEntries
+      .filter((e) => !e.projected)
+      .map((e) => ({ name: new Date(e.date).toLocaleDateString(), value: Number(e.value) }));
 
-    const items = this.graphEntries.map((e) => ({
-      ...e,
-      t: new Date(e.date).getTime(),
-      v: Number(e.value),
-    })).filter((e) => !isNaN(e.t) && !isNaN(e.v));
+    const projectedSeries = this.graphEntries
+      .filter((e) => e.projected)
+      .map((e) => ({ name: new Date(e.date).toLocaleDateString(), value: Number(e.value) }));
 
-    if (items.length === 0) {
-      this.graphRealPolyline = '';
-      this.graphProjectedPolyline = '';
-      this.graphPoints = [];
-      return;
-    }
-
-    const minT = Math.min(...items.map((i) => i.t));
-    const maxT = Math.max(...items.map((i) => i.t));
-    let minV = Math.min(...items.map((i) => i.v));
-    let maxV = Math.max(...items.map((i) => i.v));
-
-    if (minV === maxV) { // avoid flat line scaling
-      minV -= 1;
-      maxV += 1;
-    }
-    const tRange = maxT - minT || 1;
-    const vRange = maxV - minV || 1;
-
-    const scaleX = (t: number) => p + ((t - minT) / tRange) * innerW;
-    const scaleY = (v: number) => p + innerH - ((v - minV) / vRange) * innerH;
-
-    const sorted = items.sort((a, b) => a.t - b.t);
-
-    const realPts: string[] = [];
-    const projPts: string[] = [];
-    const pts: { x: number; y: number; label: string; dateStr: string; value: number; projected?: boolean }[] = [];
-
-    for (const it of sorted) {
-      const x = scaleX(it.t);
-      const y = scaleY(it.v);
-      pts.push({ x, y, label: it.label, dateStr: new Date(it.t).toLocaleDateString(), value: it.v, projected: it.projected });
-      if (it.projected) {
-        projPts.push(`${x},${y}`);
-      } else {
-        realPts.push(`${x},${y}`);
-      }
-    }
-
-    // compute ticks
-    const xTickCount = Math.min(6, Math.max(2, Math.round(innerW / 120)));
-    const yTickCount = 5;
-    const xTicks: { x: number; label: string }[] = [];
-    for (let i = 0; i <= xTickCount; i++) {
-      const t = minT + (tRange * i) / xTickCount;
-      const x = scaleX(t);
-      const label = new Date(t).toLocaleDateString();
-      xTicks.push({ x, label });
-    }
-    const yTicks: { y: number; label: string }[] = [];
-    for (let i = 0; i <= yTickCount; i++) {
-      const v = minV + (vRange * i) / yTickCount;
-      const y = scaleY(v);
-      const label = `${v.toFixed(2)}`;
-      yTicks.push({ y, label });
-    }
-
-    this.graphRealPolyline = realPts.join(' ');
-    this.graphProjectedPolyline = projPts.join(' ');
-    this.graphPoints = pts;
-    this.xTicks = xTicks;
-    this.yTicks = yTicks;
+    this.chartData = [
+      { name: 'Actual', series: actualSeries },
+      { name: 'Projected', series: projectedSeries },
+    ];
   }
 
   openPicker(event: Event): void {
@@ -289,21 +202,5 @@ export class DatasetEntries implements OnInit, OnDestroy {
     }
   }
 
-  // Tooltip handlers for SVG points
-  showTip(evt: MouseEvent, p: { x: number; y: number; label: string; dateStr: string; value: number; projected?: boolean }): void {
-    const margin = 12;
-    this.tooltip.visible = true;
-    this.tooltip.text = `${p.dateStr} — ${p.label}: ${p.value}${this.datasetSymbol ? ' ' + this.datasetSymbol : ''}${p.projected ? ' (projected)' : ''}`;
-    this.tooltip.x = (evt.clientX || 0) + margin;
-    this.tooltip.y = (evt.clientY || 0) + margin;
-  }
-  moveTip(evt: MouseEvent): void {
-    if (!this.tooltip.visible) return;
-    const margin = 12;
-    this.tooltip.x = (evt.clientX || 0) + margin;
-    this.tooltip.y = (evt.clientY || 0) + margin;
-  }
-  hideTip(): void {
-    this.tooltip.visible = false;
-  }
+  protected readonly LegendPosition = LegendPosition;
 }

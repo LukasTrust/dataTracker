@@ -252,25 +252,3 @@ label {
 .inline > * {
   flex: 1;
 }
-
-/* Charts */
-.chart {
-  background: linear-gradient(180deg, #ffffff 0%, #f9f5ff 100%);
-  border: 1px solid #e5d9ff;
-  border-radius: var(--radius-md);
-  padding: var(--space-4);
-  box-shadow: var(--shadow-sm);
-}
-
-/* Tooltip */
-.tooltip {
-  position: fixed;
-  background: rgba(17, 24, 39, 0.95);
-  color: #fff;
-  padding: 6px 10px;
-  border-radius: 6px;
-  font-size: 13px;
-  pointer-events: none;
-  z-index: 1000;
-  box-shadow: var(--shadow-sm);
-}

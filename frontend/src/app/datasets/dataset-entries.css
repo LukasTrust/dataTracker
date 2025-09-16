@@ -1,20 +1,31 @@
-.axis-label {
-  fill: #444;
+.chart-container {
+  display: flex;
+  height: 75vh;
+  flex-direction: column;
+  justify-content: center;
+  background: linear-gradient(180deg, #ffffff 0%, #f9f5ff 100%);
+  border: 1px solid #e5d9ff;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.chart-wrapper {
+  margin: var(--space-3);
+}
+
+/* ngx-charts overrides (optional) */
+ngx-charts-line-chart text {
   font-size: 12px;
+  fill: #444;
   font-weight: 600;
 }
-.x-ticks text, .y-ticks text {
-  fill: #666;
+
+ngx-charts-line-chart .axis text {
   font-size: 11px;
+  fill: #666;
 }
-.gridlines-x line, .gridlines-y line {
-  stroke: #eee;
-}
-.legend text {
-  fill: #333;
-}
-.graph-hint {
-  margin-top: 6px;
-  color: #666;
+
+ngx-charts-line-chart .legend text {
   font-size: 12px;
+  fill: #333;
 }

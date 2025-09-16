@@ -38,18 +38,13 @@
         </thead>
         <tbody>
         <tr>
-          <td>
-            <input type="text" [(ngModel)]="newEntry.label" placeholder="Label"/>
-          </td>
-          <td>
-            <input type="number" [(ngModel)]="newEntry.value" placeholder="Value"/>
-          </td>
-          <td>
-            <input type="date" [(ngModel)]="newEntry.date" (click)="openPicker($event)"/>
-          </td>
+          <td><input type="text" [(ngModel)]="newEntry.label" placeholder="Label"/></td>
+          <td><input type="number" [(ngModel)]="newEntry.value" placeholder="Value"/></td>
+          <td><input type="date" [(ngModel)]="newEntry.date" (click)="openPicker($event)"/></td>
           <td>
             <button class="btn btn-primary" type="button" (click)="addEntry()"><i class="fas fa-plus"></i> Add</button>
-            <button class="btn btn-secondary" type="button" (click)="newEntry = { value: null, label: '', date: '' }"><i class="fas fa-broom"></i> Clear</button>
+            <button class="btn btn-secondary" type="button" (click)="resetNewEntry()"><i class="fas fa-broom"></i> Clear
+            </button>
           </td>
         </tr>
 
@@ -58,8 +53,11 @@
           <td><input type="number" [(ngModel)]="e.value"/></td>
           <td><input type="date" [(ngModel)]="e.date" (click)="openPicker($event)"/></td>
           <td>
-            <button class="btn btn-primary btn-primary" type="button" (click)="saveEntry(e)"><i class="fas fa-save"></i> Save</button>
-            <button class="btn btn-danger" type="button" (click)="deleteEntry(e)"><i class="fas fa-trash-alt"></i> Delete</button>
+            <button class="btn btn-primary" type="button" (click)="saveEntry(e)"><i class="fas fa-save"></i> Save
+            </button>
+            <button class="btn btn-danger" type="button" (click)="deleteEntry(e)"><i class="fas fa-trash-alt"></i>
+              Delete
+            </button>
           </td>
         </tr>
 
@@ -71,90 +69,28 @@
     </div>
 
     <!-- Graph tab -->
-    <div *ngIf="activeTab() === 'graph'">
+    <div class="chart-container" *ngIf="activeTab() === 'graph'">
       <div *ngIf="graphLoading()">Loading graph...</div>
-      <div *ngIf="!graphLoading()">
-        <svg [attr.width]="graphViewBox.width" [attr.height]="graphViewBox.height" class="chart">
-          <defs>
-            <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="2.2" result="coloredBlur"/>
-              <feMerge>
-                <feMergeNode in="coloredBlur"/>
-                <feMergeNode in="SourceGraphic"/>
-              </feMerge>
-            </filter>
-          </defs>
-          <!-- Gridlines and axes -->
-          <g class="gridlines-x">
-            <line *ngFor="let t of xTicks" [attr.x1]="t.x" [attr.x2]="t.x"
-                  [attr.y1]="graphViewBox.padding" [attr.y2]="graphViewBox.height - graphViewBox.padding" stroke="#eee"/>
-          </g>
-          <g class="gridlines-y">
-            <line *ngFor="let t of yTicks" [attr.x1]="graphViewBox.padding"
-                  [attr.x2]="graphViewBox.width - graphViewBox.padding"
-                  [attr.y1]="t.y" [attr.y2]="t.y" stroke="#eee"/>
-          </g>
-          <line [attr.x1]="graphViewBox.padding" [attr.y1]="graphViewBox.height - graphViewBox.padding"
-                [attr.x2]="graphViewBox.width - graphViewBox.padding"
-                [attr.y2]="graphViewBox.height - graphViewBox.padding"
-                stroke="#999"/>
-          <line [attr.x1]="graphViewBox.padding" [attr.y1]="graphViewBox.padding"
-                [attr.x2]="graphViewBox.padding" [attr.y2]="graphViewBox.height - graphViewBox.padding"
-                stroke="#999"/>
 
-          <!-- Tick labels -->
-          <g class="x-ticks">
-            <text *ngFor="let t of xTicks" [attr.x]="t.x" [attr.y]="graphViewBox.height - graphViewBox.padding + 16"
-                  text-anchor="middle">{{ t.label }}
-            </text>
-          </g>
-          <g class="y-ticks">
-            <text *ngFor="let t of yTicks" [attr.x]="graphViewBox.padding - 8" [attr.y]="t.y + 4"
-                  text-anchor="end">{{ t.label }}
-            </text>
-          </g>
-          <!-- Axis labels -->
-          <text class="axis-label" [attr.x]="graphViewBox.width / 2" [attr.y]="graphViewBox.height - 6"
-                text-anchor="middle">Date
-          </text>
-          <text
-            class="axis-label"
-            [attr.x]="16"
-            [attr.y]="graphViewBox.height / 2"
-            [attr.transform]="'rotate(-90 16,' + (graphViewBox.height / 2) + ')'"
-            text-anchor="middle">
-            Value {{ datasetSymbol ? '(' + datasetSymbol + ')' : '' }}
-          </text>
-
-          <!-- Data lines -->
-          <polyline *ngIf="graphRealPolyline" [attr.points]="graphRealPolyline" fill="none" stroke="#1976d2"
-                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)"/>
-          <polyline *ngIf="graphProjectedPolyline" [attr.points]="graphProjectedPolyline" fill="none" stroke="#9c27b0"
-                    stroke-width="2.5" stroke-dasharray="6,6" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)"/>
-
-          <!-- Points with hover -->
-          <g *ngFor="let p of graphPoints">
-            <circle [attr.cx]="p.x" [attr.cy]="p.y" r="4" [attr.fill]="p.projected ? '#9c27b0' : '#1976d2'" stroke="#fff" stroke-width="1.5" filter="url(#glow)"
-                    (mouseenter)="showTip($event, p)" (mousemove)="moveTip($event)" (mouseleave)="hideTip()"/>
-          </g>
-
-          <!-- Legend -->
-          <g class="legend">
-            <rect x="10" y="10" width="14" height="2" fill="none" stroke="#1976d2" stroke-width="2"></rect>
-            <text x="30" y="14" font-size="12">Actual</text>
-            <rect x="90" y="10" width="14" height="2" fill="none" stroke="#9c27b0" stroke-width="2"
-                  stroke-dasharray="5,5"></rect>
-            <text x="112" y="14" font-size="12">Projected</text>
-          </g>
-        </svg>
-        <div *ngIf="graphPoints.length === 0">No data to display.</div>
-        <div class="graph-hint">Y-axis: value {{ datasetSymbol ? '(' + datasetSymbol + ')' : '' }} · X-axis: date. Hover
-          points for details.
-        </div>
-        <div class="tooltip" *ngIf="tooltip.visible" [style.left.px]="tooltip.x"
-             [style.top.px]="tooltip.y">{{ tooltip.text }}
+      <div *ngIf="!graphLoading() && chartData.length">
+        <div class="chart-wrapper">
+          <ngx-charts-line-chart
+            [scheme]="colorScheme"
+            [results]="chartData"
+            [xAxis]="true"
+            [yAxis]="true"
+            [legend]="true"
+            [legendPosition]=LegendPosition.Below
+            [showXAxisLabel]="true"
+            [showYAxisLabel]="true"
+            [xAxisLabel]="'Date'"
+            [yAxisLabel]="'Value ' + (datasetSymbol ? '(' + datasetSymbol + ')' : '')"
+            [autoScale]="true"
+            [timeline]="true">
+          </ngx-charts-line-chart>
         </div>
       </div>
+      <div *ngIf="!graphLoading() && chartData.length === 0">No data to display.</div>
     </div>
 
     <!-- Edit tab: reuse DatasetForm -->
