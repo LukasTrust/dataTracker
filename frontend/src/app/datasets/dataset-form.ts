@@ -2,9 +2,10 @@ import {Component, OnInit, signal, OnDestroy} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {ActivatedRoute, Router, RouterModule} from '@angular/router';
-import {HttpClient} from '@angular/common/http';
 import { UiEventsService } from '../services/ui-events.service';
 import { Subscription } from 'rxjs';
+import { ApiService } from '../services/api.service';
+import { DateUtils } from '../services/date-utils';
 
 interface DatasetDto {
   id?: number;
@@ -33,7 +34,7 @@ export class DatasetForm implements OnInit, OnDestroy {
 
   constructor(
     private readonly fb: FormBuilder,
-    private readonly http: HttpClient,
+    private readonly api: ApiService,
     private readonly route: ActivatedRoute,
     private readonly router: Router,
     private readonly ui: UiEventsService,
@@ -65,11 +66,11 @@ export class DatasetForm implements OnInit, OnDestroy {
 
   private fetchDataset(id: number): void {
     this.loading.set(true);
-    this.http.get<DatasetDto>(`http://localhost:8080/datasets/${id}`).subscribe({
+    this.api.get<DatasetDto>(`/datasets/${id}`).subscribe({
       next: (data) => {
         // Attempt to normalize dates to yyyy-MM-dd if present
-        const start = data.startDate ? this.toDateInputValue(data.startDate) : null;
-        const end = data.endDate ? this.toDateInputValue(data.endDate) : null;
+        const start = data.startDate ? DateUtils.toDateInputValue(data.startDate) : null;
+        const end = data.endDate ? DateUtils.toDateInputValue(data.endDate) : null;
         this.form.patchValue({
           name: data.name ?? '',
           description: data.description ?? '',
@@ -97,7 +98,7 @@ export class DatasetForm implements OnInit, OnDestroy {
 
     this.loading.set(true);
     if (this.isEditMode() && this.datasetId !== null) {
-      this.http.put(`http://localhost:8080/datasets/${this.datasetId}`, dto).subscribe({
+      this.api.put(`/datasets/${this.datasetId}`, dto).subscribe({
         next: () => {
           this.ui.showAlert('success', 'Dataset updated successfully.');
           this.ui.requestSidebarRefresh();
@@ -111,7 +112,7 @@ export class DatasetForm implements OnInit, OnDestroy {
         complete: () => this.loading.set(false),
       });
     } else {
-      this.http.post<{ id: number } | any>(`http://localhost:8080/datasets`, dto).subscribe({
+      this.api.post<{ id: number } | any>(`/datasets`, dto).subscribe({
         next: (res) => {
           this.ui.showAlert('success', 'Dataset created successfully.');
           const newId = (res && typeof res === 'object' && 'id' in res) ? Number((res as any).id) : null;
@@ -150,20 +151,6 @@ export class DatasetForm implements OnInit, OnDestroy {
       startDate: v.startDate && v.startDate !== '' ? v.startDate : null,
       endDate: v.endDate && v.endDate !== '' ? v.endDate : null,
     };
-  }
-
-  private toDateInputValue(value: string): string {
-    // Accept ISO or date string and normalize to yyyy-MM-dd for date input
-    try {
-      const d = new Date(value);
-      if (isNaN(d.getTime())) return value;
-      const yyyy = d.getFullYear();
-      const mm = String(d.getMonth() + 1).padStart(2, '0');
-      const dd = String(d.getDate()).padStart(2, '0');
-      return `${yyyy}-${mm}-${dd}`;
-    } catch {
-      return value;
-    }
   }
 
   ngOnDestroy(): void {

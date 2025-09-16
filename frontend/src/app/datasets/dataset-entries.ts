@@ -2,11 +2,12 @@ import { Component, OnDestroy, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { HttpClient } from '@angular/common/http';
 import { UiEventsService } from '../services/ui-events.service';
 import { Entry } from '../models/entry-model';
 import { DatasetForm } from './dataset-form';
 import { Subscription } from 'rxjs';
+import { ApiService } from '../services/api.service';
+import { DateUtils } from '../services/date-utils';
 
 @Component({
   selector: 'app-dataset-entries',
@@ -46,7 +47,7 @@ export class DatasetEntries implements OnInit, OnDestroy {
   constructor(
     private readonly route: ActivatedRoute,
     private readonly router: Router,
-    private readonly http: HttpClient,
+    private readonly api: ApiService,
     private readonly ui: UiEventsService,
   ) {}
 
@@ -80,9 +81,9 @@ export class DatasetEntries implements OnInit, OnDestroy {
   // ===== Entries CRUD =====
   loadEntries(datasetId: number): void {
     this.entriesLoading.set(true);
-    this.http.get<Entry[]>(`http://localhost:8080/datasets/${datasetId}/entries`).subscribe({
+    this.api.get<Entry[]>(`/datasets/${datasetId}/entries`).subscribe({
       next: (rows) => {
-        this.entries = (rows || []).map((r) => ({ ...r, date: r.date ? this.toDateInputValue(r.date as any) : '' }));
+        this.entries = (rows || []).map((r) => ({ ...r, date: r.date ? DateUtils.toDateInputValue(r.date as any) : '' }));
       },
       error: (err) => {
         console.error('Failed to load entries', err);
@@ -105,17 +106,17 @@ export class DatasetEntries implements OnInit, OnDestroy {
     const payload = {
       value: Number(value),
       label,
-      date: this.toISOString(date)  // <-- convert here
+      date: DateUtils.toISOString(date)  // normalized for backend
     } as any;
 
-    this.http
-      .post<Entry | any>(`http://localhost:8080/datasets/${this.datasetId}/entries`, payload)
+    this.api
+      .post<Entry | any>(`/datasets/${this.datasetId}/entries`, payload)
       .subscribe({
         next: (res) => {
           this.ui.showAlert('success', 'Entry created.');
           if (res && typeof res === 'object' && 'id' in res) {
             const created = res as Entry;
-            created.date = created.date ? this.toDateInputValue(created.date as any) : '';
+            created.date = created.date ? DateUtils.toDateInputValue(created.date as any) : '';
             this.entries = [created, ...this.entries];
           } else {
             this.loadEntries(this.datasetId!);
@@ -136,9 +137,9 @@ export class DatasetEntries implements OnInit, OnDestroy {
       datasetId: this.datasetId,
       value: Number(entry.value),
       label: (entry.label || '').trim(),
-      date: this.toISOString(entry.date), // <-- fix here
+      date: DateUtils.toISOString(entry.date),
     };
-    this.http.put(`http://localhost:8080/entries/${id}`, payload).subscribe({
+    this.api.put(`/entries/${id}`, payload).subscribe({
       next: () => this.ui.showAlert('success', 'Entry updated.'),
       error: (err) => {
         console.error('Failed to update entry', err);
@@ -147,16 +148,9 @@ export class DatasetEntries implements OnInit, OnDestroy {
     });
   }
 
-  private toISOString(dateStr: string): string {
-    if (!dateStr) return '';
-    const d = new Date(dateStr);
-    if (isNaN(d.getTime())) return dateStr;
-    return d.toISOString(); // e.g. "2025-01-01T00:00:00.000Z"
-  }
-
   deleteEntry(entry: Entry): void {
     const id = entry.id;
-    this.http.delete(`http://localhost:8080/entries/${id}`).subscribe({
+    this.api.delete(`/entries/${id}`).subscribe({
       next: () => {
         this.ui.showAlert('success', 'Entry deleted.');
         this.entries = this.entries.filter((e) => e.id !== id);
@@ -166,19 +160,6 @@ export class DatasetEntries implements OnInit, OnDestroy {
         this.ui.showAlert('error', 'Failed to delete entry.');
       },
     });
-  }
-
-  toDateInputValue(value: string): string {
-    try {
-      const d = new Date(value);
-      if (isNaN(d.getTime())) return value;
-      const yyyy = d.getFullYear();
-      const mm = String(d.getMonth() + 1).padStart(2, '0');
-      const dd = String(d.getDate()).padStart(2, '0');
-      return `${yyyy}-${mm}-${dd}`;
-    } catch {
-      return value;
-    }
   }
 
   private resetNewEntry(): void {
@@ -195,9 +176,9 @@ export class DatasetEntries implements OnInit, OnDestroy {
   loadGraph(type: 'actual' | 'target' | 'endDate' = this.graphType()): void {
     if (this.datasetId === null) return;
     this.graphLoading.set(true);
-    const base = `http://localhost:8080/datasets/${this.datasetId}/entries`;
+    const base = `/datasets/${this.datasetId}/entries`;
     const url = type === 'actual' ? base : type === 'target' ? `${base}/projected/target` : `${base}/projected/endDate`;
-    this.http.get<Entry[]>(url).subscribe({
+    this.api.get<Entry[]>(url).subscribe({
       next: (rows) => {
         this.graphEntries = (rows || []).slice().sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
         this.updateGraphGeometry();
@@ -211,7 +192,7 @@ export class DatasetEntries implements OnInit, OnDestroy {
   }
 
   private loadDatasetMeta(id: number): void {
-    this.http.get<any>(`http://localhost:8080/datasets/${id}`).subscribe({
+    this.api.get<any>(`/datasets/${id}`).subscribe({
       next: (d) => {
         this.datasetSymbol = (d && typeof d === 'object' && 'symbol' in d) ? String((d as any).symbol ?? '') : '';
       },
