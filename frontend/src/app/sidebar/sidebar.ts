@@ -1,8 +1,9 @@
 import {CommonModule} from '@angular/common';
-import {Component, input, OnInit, output} from '@angular/core';
+import {Component, OnInit, input, output} from '@angular/core';
 import {RouterModule} from '@angular/router';
 import {Dataset} from '../models/dataset-model';
 import {HttpClient} from '@angular/common/http';
+import { UiEventsService } from '../services/ui-events.service';
 
 @Component({
   selector: 'app-sidebar',
@@ -17,12 +18,11 @@ export class Sidebar implements OnInit {
   // Emits alerts to the parent (App)
   notify = output<{ type: 'info' | 'error' | 'success'; message: string }>();
 
-
-  constructor(private readonly http: HttpClient) {
-  }
+  constructor(private readonly http: HttpClient, private readonly ui: UiEventsService) {}
 
   ngOnInit(): void {
     this.loadDatasets();
+    this.ui.sidebarRefresh$.subscribe(() => this.loadDatasets());
   }
 
   // Default item
@@ -39,7 +39,7 @@ export class Sidebar implements OnInit {
       next: (datasets) => {
         // Map API datasets
         const datasetItems = datasets.map((dataset) => ({
-          routeLink: `/datasets/${dataset.id}/`,
+          routeLink: `/datasets/${dataset.id}/edit`,
           icon: 'fal fa-database',
           label: dataset.name,
         }));

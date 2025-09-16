@@ -1,0 +1,46 @@
+<div class="container">
+  <h2>{{ isEditMode() ? 'Edit Dataset' : 'New Dataset' }}</h2>
+
+  <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <div class="form-row">
+      <label for="name">Name</label>
+      <input id="name" type="text" formControlName="name" required />
+      <div class="error" *ngIf="form.get('name')?.touched && form.get('name')?.invalid">
+        Name is required.
+      </div>
+    </div>
+
+    <div class="form-row">
+      <label for="description">Description</label>
+      <textarea id="description" rows="3" formControlName="description"></textarea>
+    </div>
+
+    <div class="form-row">
+      <label for="symbol">Symbol</label>
+      <input id="symbol" type="text" formControlName="symbol" required />
+      <div class="error" *ngIf="form.get('symbol')?.touched && form.get('symbol')?.invalid">
+        Symbol is required.
+      </div>
+    </div>
+
+    <div class="form-row">
+      <label for="targetValue">Target Value</label>
+      <input id="targetValue" type="number" formControlName="targetValue" />
+    </div>
+
+    <div class="form-row inline">
+      <div>
+        <label for="startDate">Start Date</label>
+        <input id="startDate" type="date" formControlName="startDate" />
+      </div>
+      <div>
+        <label for="endDate">End Date</label>
+        <input id="endDate" type="date" formControlName="endDate" />
+      </div>
+    </div>
+
+    <div class="actions">
+      <button type="submit" [disabled]="loading()">{{ isEditMode() ? 'Update' : 'Create' }}</button>
+    </div>
+  </form>
+</div>
