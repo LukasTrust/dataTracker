@@ -1,7 +1,7 @@
 import { Component, OnDestroy, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { UiEventsService } from '../services/ui-events.service';
 import { Entry } from '../models/entry-model';
 import { DatasetForm } from './dataset-form';
@@ -11,10 +11,12 @@ import { DateUtils } from '../services/date-utils';
 
 import {Color, LegendPosition, NgxChartsModule, ScaleType} from '@swimlane/ngx-charts';
 
+type GraphType = 'actual' | 'target' | 'endDate';
+
 @Component({
   selector: 'app-dataset-entries',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule, DatasetForm, NgxChartsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, DatasetForm, NgxChartsModule],
   templateUrl: './dataset-entries.html',
   styleUrl: './dataset-entries.css',
 })
@@ -32,7 +34,7 @@ export class DatasetEntries implements OnInit, OnDestroy {
   datasetSymbol: string = '';
 
   // Graph state
-  graphType = signal<'actual' | 'target' | 'endDate'>('actual');
+  graphType = signal<GraphType>('actual');
   graphLoading = signal<boolean>(false);
   graphEntries: Entry[] = [];
 
@@ -49,7 +51,6 @@ export class DatasetEntries implements OnInit, OnDestroy {
 
   constructor(
     private readonly route: ActivatedRoute,
-    private readonly router: Router,
     private readonly api: ApiService,
     private readonly ui: UiEventsService,
   ) {}
@@ -85,7 +86,7 @@ export class DatasetEntries implements OnInit, OnDestroy {
       next: (rows) => {
         this.entries = (rows || []).map((r) => ({ ...r, date: r.date ? DateUtils.toDateInputValue(r.date as any) : '' }));
       },
-      error: (err) => this.ui.showAlert('error', 'Failed to load entries.'),
+      error: () => this.ui.showAlert('error', 'Failed to load entries.'),
       complete: () => this.entriesLoading.set(false),
     });
   }
@@ -147,13 +148,13 @@ export class DatasetEntries implements OnInit, OnDestroy {
   }
 
   // ===== Graph logic =====
-  setGraphType(type: 'actual' | 'target' | 'endDate'): void {
+  setGraphType(type: GraphType): void {
     this.graphType.set(type);
     this.activeTab.set('graph');
     this.loadGraph(type);
   }
 
-  loadGraph(type: 'actual' | 'target' | 'endDate' = this.graphType()): void {
+  loadGraph(type: GraphType = this.graphType()): void {
     if (!this.datasetId) return;
 
     this.graphLoading.set(true);

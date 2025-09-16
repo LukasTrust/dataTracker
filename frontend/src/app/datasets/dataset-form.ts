@@ -2,10 +2,10 @@ import {Component, OnInit, signal, OnDestroy} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {ActivatedRoute, Router, RouterModule} from '@angular/router';
-import { UiEventsService } from '../services/ui-events.service';
-import { Subscription } from 'rxjs';
-import { ApiService } from '../services/api.service';
-import { DateUtils } from '../services/date-utils';
+import {UiEventsService} from '../services/ui-events.service';
+import {Subscription} from 'rxjs';
+import {ApiService} from '../services/api.service';
+import {DateUtils} from '../services/date-utils';
 
 interface DatasetDto {
   id?: number;
@@ -38,7 +38,8 @@ export class DatasetForm implements OnInit, OnDestroy {
     private readonly route: ActivatedRoute,
     private readonly router: Router,
     private readonly ui: UiEventsService,
-  ) {}
+  ) {
+  }
 
   ngOnInit(): void {
     this.form = this.fb.group({
@@ -59,7 +60,7 @@ export class DatasetForm implements OnInit, OnDestroy {
       } else {
         this.isEditMode.set(false);
         this.datasetId = null;
-        this.form.reset({ name: '', description: '', symbol: '', targetValue: null, startDate: null, endDate: null });
+        this.form.reset({name: '', description: '', symbol: '', targetValue: null, startDate: null, endDate: null});
       }
     });
   }
@@ -91,7 +92,10 @@ export class DatasetForm implements OnInit, OnDestroy {
   openPicker(event: Event): void {
     const input = event.target as HTMLInputElement | null;
     if (input && typeof (input as any).showPicker === 'function') {
-      try { (input as any).showPicker(); } catch {}
+      try {
+        (input as any).showPicker();
+      } catch {
+      }
     } else {
       input?.focus();
     }
@@ -121,15 +125,15 @@ export class DatasetForm implements OnInit, OnDestroy {
         complete: () => this.loading.set(false),
       });
     } else {
-      this.api.post<{ id: number } | any>(`/datasets`, dto).subscribe({
+      this.api.post<{ id: number }>(`/datasets`, dto).subscribe({
         next: (res) => {
           this.ui.showAlert('success', 'Dataset created successfully.');
-          const newId = (res && typeof res === 'object' && 'id' in res) ? Number((res as any).id) : null;
+          const newId = (res && typeof res === 'object' && 'id' in res) ? Number((res).id) : null;
           this.ui.requestSidebarRefresh();
           if (newId) {
             this.router.navigateByUrl(`/datasets/${newId}`).catch(() => this.router.navigateByUrl('/'));
           } else {
-            this.router.navigateByUrl('/');
+            this.router.navigateByUrl('/').then();
           }
         },
         error: (err) => {
