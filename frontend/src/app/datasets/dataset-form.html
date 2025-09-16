@@ -1,12 +1,10 @@
 <div class="container">
   <div>
-    <h2>{{ isEditMode() ? 'Edit Dataset' : 'New Dataset' }}</h2>
-
     <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
       <div class="form-row">
         <label for="name">Name</label>
-        <input id="name" type="text" formControlName="name" required />
-        <div class="error" *ngIf="form.get('name')?.touched && form.get('name')?.invalid">
+        <input id="name" type="text" formControlName="name" required/>
+        <div class="error" [class.visible]="form.get('name')?.touched && form.get('name')?.invalid">
           Name is required.
         </div>
       </div>
@@ -18,30 +16,33 @@
 
       <div class="form-row">
         <label for="symbol">Symbol</label>
-        <input id="symbol" type="text" formControlName="symbol" required />
-        <div class="error" *ngIf="form.get('symbol')?.touched && form.get('symbol')?.invalid">
+        <input id="symbol" type="text" formControlName="symbol" required/>
+        <div class="error" [class.visible]="form.get('symbol')?.touched && form.get('symbol')?.invalid">
           Symbol is required.
         </div>
       </div>
 
       <div class="form-row">
         <label for="targetValue">Target Value</label>
-        <input id="targetValue" type="number" formControlName="targetValue" />
+        <input id="targetValue" type="number" formControlName="targetValue"/>
       </div>
 
-      <div class="form-row inline">
+      <div class="form-row">
         <div>
           <label for="startDate">Start Date</label>
-          <input id="startDate" type="date" formControlName="startDate" (click)="openPicker($event)" />
+          <input id="startDate" type="date" formControlName="startDate" (click)="openPicker($event)"/>
         </div>
+      </div>
+      <div class="form-row">
         <div>
           <label for="endDate">End Date</label>
-          <input id="endDate" type="date" formControlName="endDate" (click)="openPicker($event)" />
+          <input id="endDate" type="date" formControlName="endDate" (click)="openPicker($event)"/>
         </div>
       </div>
 
       <div class="actions">
-        <button class="btn btn-lg" [ngClass]="isEditMode() ? 'btn-primary' : 'btn-accent'" type="submit" [disabled]="loading()">
+        <button class="btn btn-lg width-btn" [ngClass]="isEditMode() ? 'btn-primary' : 'btn-primary'" type="submit"
+                [disabled]="loading()">
           <i class="fas" [ngClass]="isEditMode() ? 'fa-save' : 'fa-plus'" aria-hidden="true"></i>
           {{ isEditMode() ? 'Update' : 'Create' }}
         </button>

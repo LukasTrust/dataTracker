@@ -4,17 +4,6 @@
   margin-bottom: 0.75rem;
 }
 
-.form-row.inline {
-  flex-direction: row;
-  gap: 1rem;
-}
-
-.form-row.inline > div {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
 .actions {
   margin-top: 1rem;
 }
@@ -23,4 +12,15 @@
   color: var(--color-danger);
   font-size: 0.85rem;
   margin-top: 0.25rem;
+  min-height: 1em;
+  visibility: hidden;
+}
+
+.error.visible {
+  visibility: visible;
+}
+
+.width-btn {
+  margin-top: 1rem;
+  width: 100%;
 }

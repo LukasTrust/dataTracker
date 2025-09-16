@@ -30,19 +30,19 @@
       <table class="table">
         <thead>
         <tr>
-          <th style="width: 120px;">Value</th>
           <th>Label</th>
-          <th style="width: 160px;">Date</th>
-          <th style="width: 220px;">Actions</th>
+          <th style="width: 220px;">Value</th>
+          <th style="width: 220px;">Date</th>
+          <th style="width: 300px;">Actions</th>
         </tr>
         </thead>
         <tbody>
         <tr>
           <td>
-            <input type="number" [(ngModel)]="newEntry.value" placeholder="Value"/>
+            <input type="text" [(ngModel)]="newEntry.label" placeholder="Label"/>
           </td>
           <td>
-            <input type="text" [(ngModel)]="newEntry.label" placeholder="Label"/>
+            <input type="number" [(ngModel)]="newEntry.value" placeholder="Value"/>
           </td>
           <td>
             <input type="date" [(ngModel)]="newEntry.date" (click)="openPicker($event)"/>
@@ -54,11 +54,11 @@
         </tr>
 
         <tr *ngFor="let e of entries">
-          <td><input type="number" [(ngModel)]="e.value"/></td>
           <td><input type="text" [(ngModel)]="e.label"/></td>
+          <td><input type="number" [(ngModel)]="e.value"/></td>
           <td><input type="date" [(ngModel)]="e.date" (click)="openPicker($event)"/></td>
           <td>
-            <button class="btn btn-primary" type="button" (click)="saveEntry(e)"><i class="fas fa-save"></i> Save</button>
+            <button class="btn btn-primary btn-primary" type="button" (click)="saveEntry(e)"><i class="fas fa-save"></i> Save</button>
             <button class="btn btn-danger" type="button" (click)="deleteEntry(e)"><i class="fas fa-trash-alt"></i> Delete</button>
           </td>
         </tr>
