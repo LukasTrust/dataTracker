@@ -2,12 +2,14 @@
   display: flex;
   gap: 8px;
   margin-bottom: 12px;
+  flex-wrap: wrap;
 }
 .tab {
   border: 1px solid #ccc;
   background: #f7f7f7;
   padding: 6px 12px;
   cursor: pointer;
+  border-radius: 6px;
 }
 .tab.active {
   background: #e0ecff;
@@ -24,4 +26,39 @@
 }
 .entries-table th {
   background: #fafafa;
+}
+
+.chart {
+  background: #fff;
+  border: 1px solid #e5e5e5;
+}
+.axis-label {
+  fill: #444;
+  font-size: 12px;
+  font-weight: 600;
+}
+.x-ticks text, .y-ticks text {
+  fill: #666;
+  font-size: 11px;
+}
+.gridlines-x line, .gridlines-y line {
+  stroke: #eee;
+}
+.legend text {
+  fill: #333;
+}
+.graph-hint {
+  margin-top: 6px;
+  color: #666;
+  font-size: 12px;
+}
+.tooltip {
+  position: fixed;
+  background: rgba(0,0,0,0.8);
+  color: #fff;
+  padding: 6px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  pointer-events: none;
+  z-index: 1000;
 }
