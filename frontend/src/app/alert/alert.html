@@ -8,9 +8,13 @@
     <div class="alert-content">
       <!-- Icon based on alert type -->
       <span class="alert-icon">
-        <i *ngIf="alertType === 'info'" class="fa fa-info-circle"></i>
-        <i *ngIf="alertType === 'error'" class="fa fa-exclamation-triangle"></i>
-        <i *ngIf="alertType === 'success'" class="fa fa-check-circle"></i>
+        @if (alertType === 'info') {
+          <i class="fa fa-info-circle"></i>
+        } @else if (alertType === 'error') {
+          <i class="fa fa-exclamation-triangle"></i>
+        } @else if (alertType === 'success') {
+          <i class="fa fa-check-circle"></i>
+        }
       </span>
 
       <span class="alert-message">{{ alertMessage }}</span>

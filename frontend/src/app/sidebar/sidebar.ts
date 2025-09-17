@@ -47,7 +47,7 @@ export class Sidebar implements OnInit {
 
         this.items = [this.defaultItem, ...datasetItems];
       },
-      error: (err) => {
+      error: () => {
         this.notify.emit({type: 'error', message: MESSAGES.loadDatasetError});
       },
     });

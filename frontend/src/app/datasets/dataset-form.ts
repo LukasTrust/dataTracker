@@ -108,7 +108,7 @@ export class DatasetForm implements OnInit, OnDestroy {
           // Navigate back to the tabbed view (DatasetEntries)
           this.router.navigateByUrl(`/datasets/${this.datasetId}`).catch(() => this.router.navigateByUrl('/'));
         },
-        error: (err) => {
+        error: () => {
           this.ui.showAlert('error', MESSAGES.datasetUpdateError);
         },
         complete: () => this.loading.set(false),
