@@ -3,9 +3,8 @@ package migrations
 import (
 	"backend/utils"
 	"database/sql"
+	"errors"
 )
-
-const migrationsRun = "MIGRATIONS_RUN"
 
 // Up runs all migrations
 func Up(db *sql.DB) error {
@@ -21,7 +20,7 @@ func Down(db *sql.DB) error {
 
 // runMigration handles both Up and Down migrations
 func runMigration(db *sql.DB, create bool) error {
-	migrationsApplied, err := wereMigrationsRun()
+	migrationsApplied, err := areTablesPresent(db)
 	if err != nil {
 		utils.Error(err.Error())
 		return err
@@ -30,24 +29,20 @@ func runMigration(db *sql.DB, create bool) error {
 	// Skip if already in the desired state
 	if (create && migrationsApplied) || (!create && !migrationsApplied) {
 		status := map[bool]string{true: "applied", false: "rolled back"}[create]
-
 		utils.Info("Migrations already " + status + ". Skipping...")
 		return nil
 	}
 
 	var (
 		queries []string
-		flag    string
 		msg     string
 	)
 
 	if create {
 		queries = CreateDatasetsAndEntries
-		flag = "true"
 		msg = "Migrations applied successfully."
 	} else {
 		queries = DropDatasetsAndEntries
-		flag = "false"
 		msg = "Migrations rolled back."
 	}
 
@@ -56,21 +51,39 @@ func runMigration(db *sql.DB, create bool) error {
 		return err
 	}
 
-	if err := updateMigrationsRun(flag); err != nil {
-		utils.Error("Failed to update migration state: " + err.Error())
-		return err
-	}
-
 	utils.Success(msg)
 	return nil
 }
 
-func wereMigrationsRun() (bool, error) {
-	migrationsRunValue, err := utils.GetEnvVariable(migrationsRun)
+// areTablesPresent checks if the datasets and entries tables exist
+func areTablesPresent(db *sql.DB) (bool, error) {
+	var tableName string
+
+	err := db.QueryRow(`
+		SELECT table_name 
+		FROM information_schema.tables 
+		WHERE table_schema = 'public' AND table_name = 'datasets'
+	`).Scan(&tableName)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return false, nil
+		}
 		return false, err
 	}
-	return migrationsRunValue == "true", nil
+
+	err = db.QueryRow(`
+		SELECT table_name 
+		FROM information_schema.tables 
+		WHERE table_schema = 'public' AND table_name = 'entries'
+	`).Scan(&tableName)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return false, nil
+		}
+		return false, err
+	}
+
+	return true, nil
 }
 
 func executeAction(db *sql.DB, actions []string) error {
@@ -78,13 +91,6 @@ func executeAction(db *sql.DB, actions []string) error {
 		if _, err := db.Exec(query); err != nil {
 			return err
 		}
-	}
-	return nil
-}
-
-func updateMigrationsRun(value string) error {
-	if err := utils.SetEnvVariable(migrationsRun, value); err != nil {
-		return err
 	}
 	return nil
 }

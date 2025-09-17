@@ -75,16 +75,32 @@ func httpSetup(db *sql.DB) error {
 	r.HandleFunc(routeEntries+routeID, h.DeleteEntryHandler).Methods(http.MethodDelete)
 
 	// Wrap the router with CORS middleware
-	corsRouter := enableCors(r)
+	corsRouter, err := enableCors(r)
+	if err != nil {
+		return err
+	}
 
 	utils.Success(fmt.Sprintf("Server starting on port %s", port))
 	return http.ListenAndServe(port, corsRouter)
 }
 
 // enableCors enables CORS for all routes
-func enableCors(next http.Handler) http.Handler {
+func enableCors(next http.Handler) (http.Handler, error) {
+	host := "http://localhost"
+
+	prod, err := utils.GetEnvVariable("PRODUCTION")
+	if err != nil {
+		return nil, err
+	}
+
+	if prod != "True" && prod != "true" {
+		host = host + ":4200"
+	}
+
+	utils.Info("CORS origin: " + host)
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:4200")
+		w.Header().Set("Access-Control-Allow-Origin", host)
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 		if r.Method == "OPTIONS" {
@@ -92,5 +108,5 @@ func enableCors(next http.Handler) http.Handler {
 			return
 		}
 		next.ServeHTTP(w, r)
-	})
+	}), nil
 }

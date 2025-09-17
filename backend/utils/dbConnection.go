@@ -2,7 +2,6 @@ package utils
 
 import (
 	"database/sql"
-	"os"
 
 	_ "github.com/lib/pq"
 )
@@ -71,13 +70,21 @@ func getDatabaseURL() (string, error) {
 }
 
 func getDatabaseHost() (string, error) {
-	prod := os.Getenv("PRODUCTION")
+	prod, err := GetEnvVariable("PRODUCTION")
+	if err != nil {
+		return "", err
+	}
+
 	if prod == "True" || prod == "true" {
-		host, err := GetEnvVariable("POSTGRES_HOST")
+		Info("Running db connection in production mode.")
+		host, err := GetEnvVariable("DB_HOST")
 		if err != nil {
 			return "", err
 		}
+
 		return host, nil
 	}
+
+	Info("Running db connection in development mode.")
 	return "localhost", nil
 }

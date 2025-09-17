@@ -1,11 +1,10 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
-  private readonly baseUrl = environment.apiUrl;
+  private readonly baseUrl = "http://localhost:8080";
 
   constructor(private readonly http: HttpClient) {}
 
@@ -29,6 +28,7 @@ export class ApiService {
     if (!path) return this.baseUrl;
     if (path.startsWith('http://') || path.startsWith('https://')) return path;
     if (!path.startsWith('/')) path = '/' + path;
+    console.log(path);
     return this.baseUrl + path;
   }
 }
