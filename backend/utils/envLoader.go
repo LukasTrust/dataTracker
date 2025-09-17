@@ -13,10 +13,17 @@ var loadEnvOnce sync.Once
 var loadErr error
 var envMap map[string]string
 
-const envFile = "../.env"
+// Default env path for local development
+var envFile = "../.env"
 
 func loadEnv() error {
 	loadEnvOnce.Do(func() {
+		prod := os.Getenv("PRODUCTION")
+		if prod == "True" || prod == "true" {
+			// In Docker, use the mounted .env file
+			envFile = "/app/.env"
+		}
+
 		// Convert to an absolute path just in case
 		absPath, err := filepath.Abs(envFile)
 		if err != nil {

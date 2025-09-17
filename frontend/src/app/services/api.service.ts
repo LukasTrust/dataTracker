@@ -1,15 +1,11 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../environments/environment';
 
-/**
- * Centralized API service to ensure consistent base URL and error handling wrappers.
- * Keep it minimal to avoid large refactors.
- */
 @Injectable({ providedIn: 'root' })
 export class ApiService {
-  // Single place to change the backend origin
-  private readonly baseUrl = 'http://localhost:8080';
+  private readonly baseUrl = environment.apiUrl;
 
   constructor(private readonly http: HttpClient) {}
 

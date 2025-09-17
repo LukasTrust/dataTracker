@@ -2,9 +2,9 @@ import {CommonModule} from '@angular/common';
 import {Component, OnInit, input, output} from '@angular/core';
 import {RouterModule} from '@angular/router';
 import {Dataset} from '../models/dataset-model';
-import {HttpClient} from '@angular/common/http';
 import { UiEventsService } from '../services/ui-events.service';
 import { MESSAGES, UI_TEXT} from '../services/message-service';
+import {ApiService} from '../services/api.service';
 
 @Component({
   selector: 'app-sidebar',
@@ -19,7 +19,7 @@ export class Sidebar implements OnInit {
   // Emits alerts to the parent (App)
   notify = output<{ type: 'info' | 'error' | 'success'; message: string }>();
 
-  constructor(private readonly http: HttpClient, private readonly ui: UiEventsService) {}
+  constructor(private readonly api: ApiService, private readonly ui: UiEventsService) {}
 
   ngOnInit(): void {
     this.loadDatasets();
@@ -36,7 +36,7 @@ export class Sidebar implements OnInit {
   items: { routeLink: string; icon: string; label: string }[] = [this.defaultItem];
 
   loadDatasets(): void {
-    this.http.get<Dataset[]>('http://localhost:8080/datasets').subscribe({
+    this.api.get<Dataset[]>('/datasets').subscribe({
       next: (datasets) => {
         // Map API datasets
         const datasetItems = datasets.map((dataset) => ({
@@ -48,7 +48,7 @@ export class Sidebar implements OnInit {
         this.items = [this.defaultItem, ...datasetItems];
       },
       error: () => {
-        this.notify.emit({type: 'error', message: MESSAGES.loadDatasetError});
+        this.notify.emit({ type: 'error', message: MESSAGES.loadDatasetError });
       },
     });
   }

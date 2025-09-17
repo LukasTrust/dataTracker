@@ -9,11 +9,13 @@ const migrationsRun = "MIGRATIONS_RUN"
 
 // Up runs all migrations
 func Up(db *sql.DB) error {
+	utils.Info("Running migrations, if necessary...")
 	return runMigration(db, true)
 }
 
 // Down rolls back all migrations
 func Down(db *sql.DB) error {
+	utils.Info("Rolling back migrations, if necessary...")
 	return runMigration(db, false)
 }
 

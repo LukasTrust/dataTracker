@@ -50,6 +50,8 @@ const (
 )
 
 func httpSetup(db *sql.DB) error {
+	utils.Info("Setting up HTTP server...")
+
 	r := mux.NewRouter()
 	h := &handlers.Handler{DB: db}
 
