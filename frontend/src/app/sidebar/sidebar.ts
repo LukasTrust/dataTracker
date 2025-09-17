@@ -4,6 +4,7 @@ import {RouterModule} from '@angular/router';
 import {Dataset} from '../models/dataset-model';
 import {HttpClient} from '@angular/common/http';
 import { UiEventsService } from '../services/ui-events.service';
+import { MESSAGES, UI_TEXT} from '../services/message-service';
 
 @Component({
   selector: 'app-sidebar',
@@ -28,8 +29,8 @@ export class Sidebar implements OnInit {
   // Default item
   readonly defaultItem = {
     routeLink: '/datasets/new',
-    icon: 'fal fa-star',
-    label: 'Add Dataset',
+    icon: 'fal fa-plus',
+    label: UI_TEXT.headers.createDataset,
   };
 
   items: { routeLink: string; icon: string; label: string }[] = [this.defaultItem];
@@ -47,8 +48,7 @@ export class Sidebar implements OnInit {
         this.items = [this.defaultItem, ...datasetItems];
       },
       error: (err) => {
-        console.error('Failed to load datasets', err);
-        this.notify.emit({type: 'error', message: 'Failed to load datasets. Please try again later.'});
+        this.notify.emit({type: 'error', message: MESSAGES.loadDatasetError});
       },
     });
   }
@@ -60,4 +60,6 @@ export class Sidebar implements OnInit {
   closeSidenav(): void {
     this.changeIsSidebarCollapsed.emit(true);
   }
+
+  protected readonly UI_TEXT = UI_TEXT;
 }

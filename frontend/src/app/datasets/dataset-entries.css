@@ -14,19 +14,8 @@
   flex: 1;
 }
 
-/* ngx-charts overrides */
-ngx-charts-line-chart text {
-  font-size: 12px;
-  fill: #444;
+.chart-header {
+  text-align: center;
+  margin-bottom: 1rem;
   font-weight: 600;
-}
-
-ngx-charts-line-chart .axis text {
-  font-size: 11px;
-  fill: #666;
-}
-
-ngx-charts-line-chart .legend text {
-  font-size: 12px;
-  fill: #333;
 }

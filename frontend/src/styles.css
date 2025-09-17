@@ -135,6 +135,10 @@ h3 {
   background: #fecaca;
 }
 
+.hidden {
+  display: none;
+}
+
 .btn-ghost {
   background: transparent;
   color: var(--color-text);

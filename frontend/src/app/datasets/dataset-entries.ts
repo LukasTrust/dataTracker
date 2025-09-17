@@ -8,8 +8,8 @@ import { DatasetForm } from './dataset-form';
 import { Subscription } from 'rxjs';
 import { ApiService } from '../services/api.service';
 import { DateUtils } from '../services/date-utils';
-
 import {Color, LegendPosition, NgxChartsModule, ScaleType} from '@swimlane/ngx-charts';
+import { MESSAGES, UI_TEXT} from '../services/message-service';
 
 type GraphType = 'actual' | 'target' | 'endDate';
 
@@ -32,6 +32,7 @@ export class DatasetEntries implements OnInit, OnDestroy {
 
   // Dataset meta
   datasetSymbol: string = '';
+  datasetName: string = '';
 
   // Graph state
   graphType = signal<GraphType>('actual');
@@ -70,6 +71,7 @@ export class DatasetEntries implements OnInit, OnDestroy {
         this.entries = [];
         this.graphEntries = [];
         this.datasetSymbol = '';
+        this.datasetName = '';
         this.chartData = [];
       }
     });
@@ -86,7 +88,7 @@ export class DatasetEntries implements OnInit, OnDestroy {
       next: (rows) => {
         this.entries = (rows || []).map((r) => ({ ...r, date: r.date ? DateUtils.toDateInputValue(r.date as any) : '' }));
       },
-      error: () => this.ui.showAlert('error', 'Failed to load entries.'),
+      error: () => this.ui.showAlert('error', MESSAGES.loadEntriesError),
       complete: () => this.entriesLoading.set(false),
     });
   }
@@ -97,7 +99,7 @@ export class DatasetEntries implements OnInit, OnDestroy {
     const label = (this.newEntry.label || '').trim();
     const date = (this.newEntry.date || '').trim();
     if (value == null || label === '' || date === '') {
-      this.ui.showAlert('info', 'Please fill value, label, and date.');
+      this.ui.showAlert('info', MESSAGES.missingFields);
       return;
     }
 
@@ -105,7 +107,7 @@ export class DatasetEntries implements OnInit, OnDestroy {
 
     this.api.post<Entry>(`/datasets/${this.datasetId}/entries`, payload).subscribe({
       next: (res) => {
-        this.ui.showAlert('success', 'Entry created.');
+        this.ui.showAlert('success', MESSAGES.entryCreated);
         if (res?.id) {
           res.date = res.date ? DateUtils.toDateInputValue(res.date as any) : '';
           this.entries = [res, ...this.entries];
@@ -114,7 +116,7 @@ export class DatasetEntries implements OnInit, OnDestroy {
         }
         this.resetNewEntry();
       },
-      error: () => this.ui.showAlert('error', 'Failed to create entry.'),
+      error: () => this.ui.showAlert('error', MESSAGES.entryCreateError),
     });
   }
 
@@ -128,18 +130,18 @@ export class DatasetEntries implements OnInit, OnDestroy {
       date: DateUtils.toISOString(entry.date),
     };
     this.api.put(`/entries/${entry.id}`, payload).subscribe({
-      next: () => this.ui.showAlert('success', 'Entry updated.'),
-      error: () => this.ui.showAlert('error', 'Failed to update entry.'),
+      next: () => this.ui.showAlert('success', MESSAGES.entryUpdated),
+      error: () => this.ui.showAlert('error', MESSAGES.entryUpdateError),
     });
   }
 
   deleteEntry(entry: Entry): void {
     this.api.delete(`/entries/${entry.id}`).subscribe({
       next: () => {
-        this.ui.showAlert('success', 'Entry deleted.');
+        this.ui.showAlert('success', MESSAGES.entryDeleted);
         this.entries = this.entries.filter((e) => e.id !== entry.id);
       },
-      error: () => this.ui.showAlert('error', 'Failed to delete entry.'),
+      error: () => this.ui.showAlert('error', MESSAGES.entryDeleteError),
     });
   }
 
@@ -172,7 +174,7 @@ export class DatasetEntries implements OnInit, OnDestroy {
           .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
         this.prepareChartData();
       },
-      error: () => this.ui.showAlert('error', 'Failed to load graph data.'),
+      error: () => this.ui.showAlert('error', MESSAGES.graphLoadError),
       complete: () => this.graphLoading.set(false),
     });
   }
@@ -181,8 +183,9 @@ export class DatasetEntries implements OnInit, OnDestroy {
     this.api.get<any>(`/datasets/${id}`).subscribe({
       next: (d) => {
         this.datasetSymbol = d?.symbol ?? '';
+        this.datasetName = d?.name ?? '';
       },
-      error: () => this.ui.showAlert('error', 'Failed to load dataset details.'),
+      error: () => this.ui.showAlert('error', MESSAGES.datasetMetaError),
     });
   }
 
@@ -196,8 +199,8 @@ export class DatasetEntries implements OnInit, OnDestroy {
       .map((e) => ({ name: new Date(e.date).toLocaleDateString(), value: Number(e.value) }));
 
     this.chartData = [
-      { name: 'Actual', series: actualSeries },
-      { name: 'Projected', series: projectedSeries },
+      { name: MESSAGES.actual, series: actualSeries },
+      { name: MESSAGES.projected, series: projectedSeries },
     ];
   }
 
@@ -211,4 +214,5 @@ export class DatasetEntries implements OnInit, OnDestroy {
   }
 
   protected readonly LegendPosition = LegendPosition;
+  protected readonly UI_TEXT = UI_TEXT;
 }

@@ -1,49 +1,52 @@
 <div class="container">
   <div>
-    <h2><i class="fas fa-database"></i> Dataset</h2>
+    <h2><i class="fas fa-database"></i> {{ UI_TEXT.headers.dataset }} </h2>
 
-    <!-- Tabs: Data | Graph variants | Edit -->
+    <!-- Tabs -->
     <div class="tabs">
       <button type="button" class="tab" [class.active]="activeTab() === 'data'" (click)="activeTab.set('data')">
-        <i class="fas fa-table"></i> Data
+        <i class="fas fa-table"></i> {{ UI_TEXT.tabs.data }}
       </button>
       <button type="button" class="tab" [class.active]="activeTab() === 'graph' && graphType() === 'actual'"
               (click)="setGraphType('actual')">
-        <i class="fas fa-chart-line"></i> Graph: Actual
+        <i class="fas fa-chart-line"></i> {{ UI_TEXT.headers.graph.actual }}
       </button>
       <button type="button" class="tab" [class.active]="activeTab() === 'graph' && graphType() === 'target'"
               (click)="setGraphType('target')">
-        <i class="fas fa-bullseye"></i> Graph: Target
+        <i class="fas fa-bullseye"></i> {{ UI_TEXT.headers.graph.target }}
       </button>
       <button type="button" class="tab" [class.active]="activeTab() === 'graph' && graphType() === 'endDate'"
               (click)="setGraphType('endDate')">
-        <i class="fas fa-calendar-alt"></i> Graph: End Date
+        <i class="fas fa-calendar-alt"></i> {{ UI_TEXT.headers.graph.endDate }}
       </button>
       <button type="button" class="tab" [class.active]="activeTab() === 'edit'" (click)="activeTab.set('edit')">
-        <i class="fas fa-pen"></i> Edit
+        <i class="fas fa-pen"></i> {{ UI_TEXT.headers.edit }}
       </button>
     </div>
 
-    <!-- Data tab: Entries table -->
+    <!-- Data tab -->
     <div *ngIf="activeTab() === 'data'">
-      <h3>Entries</h3>
+      <h3>{{ UI_TEXT.headers.entries }}</h3>
       <table class="table">
         <thead>
         <tr>
-          <th>Label</th>
-          <th style="width: 220px;">Value</th>
-          <th style="width: 220px;">Date</th>
-          <th style="width: 300px;">Actions</th>
+          <th>{{ UI_TEXT.table.label }}</th>
+          <th style="width: 220px;">{{ UI_TEXT.table.value }}</th>
+          <th style="width: 220px;">{{ UI_TEXT.table.date }}</th>
+          <th style="width: 300px;">{{ UI_TEXT.table.actions }}</th>
         </tr>
         </thead>
         <tbody>
         <tr>
-          <td><input type="text" [(ngModel)]="newEntry.label" placeholder="Label"/></td>
-          <td><input type="number" [(ngModel)]="newEntry.value" placeholder="Value"/></td>
+          <td><input type="text" [(ngModel)]="newEntry.label" [placeholder]="UI_TEXT.placeholders.label"/></td>
+          <td><input type="number" [(ngModel)]="newEntry.value" [placeholder]="UI_TEXT.placeholders.value"/></td>
           <td><input type="date" [(ngModel)]="newEntry.date" (click)="openPicker($event)"/></td>
           <td>
-            <button class="btn btn-primary" type="button" (click)="addEntry()"><i class="fas fa-plus"></i> Add</button>
-            <button class="btn btn-secondary" type="button" (click)="resetNewEntry()"><i class="fas fa-broom"></i> Clear
+            <button class="btn btn-primary" type="button" (click)="addEntry()">
+              <i class="fas fa-plus"></i> {{ UI_TEXT.buttons.add }}
+            </button>
+            <button class="btn btn-secondary" type="button" (click)="resetNewEntry()">
+              <i class="fas fa-broom"></i> {{ UI_TEXT.buttons.clear }}
             </button>
           </td>
         </tr>
@@ -53,16 +56,17 @@
           <td><input type="number" [(ngModel)]="e.value"/></td>
           <td><input type="date" [(ngModel)]="e.date" (click)="openPicker($event)"/></td>
           <td>
-            <button class="btn btn-primary" type="button" (click)="saveEntry(e)"><i class="fas fa-save"></i> Save
+            <button class="btn btn-primary" type="button" (click)="saveEntry(e)">
+              <i class="fas fa-save"></i> {{ UI_TEXT.buttons.save }}
             </button>
-            <button class="btn btn-danger" type="button" (click)="deleteEntry(e)"><i class="fas fa-trash-alt"></i>
-              Delete
+            <button class="btn btn-danger" type="button" (click)="deleteEntry(e)">
+              <i class="fas fa-trash-alt"></i> {{ UI_TEXT.buttons.delete }}
             </button>
           </td>
         </tr>
 
         <tr *ngIf="entriesLoading()">
-          <td colspan="4">Loading entries...</td>
+          <td colspan="4">{{ UI_TEXT.table.loading }}</td>
         </tr>
         </tbody>
       </table>
@@ -71,11 +75,12 @@
     <!-- Graph tab -->
     <div class="chart-container" *ngIf="activeTab() === 'graph'">
       <ng-container *ngIf="graphLoading(); else graphContent">
-        Loading graph...
+        {{ UI_TEXT.graph.loading }}
       </ng-container>
 
       <ng-template #graphContent>
         <div *ngIf="chartData.length; else noData">
+          <h3 class="chart-header">{{datasetName}}</h3>
           <div class="chart-wrapper">
             <ngx-charts-line-chart
               [scheme]="colorScheme"
@@ -86,18 +91,18 @@
               [legendPosition]="LegendPosition.Below"
               [showXAxisLabel]="true"
               [showYAxisLabel]="true"
-              [xAxisLabel]="'Date'"
-              [yAxisLabel]="'Value ' + (datasetSymbol ? '(' + datasetSymbol + ')' : '')"
+              [xAxisLabel]="UI_TEXT.graph.xAxis"
+              [yAxisLabel]="UI_TEXT.graph.yAxis + (datasetSymbol ? ' (' + datasetSymbol + ')' : '')"
               [autoScale]="true"
               [timeline]="true">
             </ngx-charts-line-chart>
           </div>
         </div>
-        <ng-template #noData>No data to display.</ng-template>
+        <ng-template #noData>{{ UI_TEXT.headers.chartNoData }}</ng-template>
       </ng-template>
     </div>
 
-    <!-- Edit tab: reuse DatasetForm -->
+    <!-- Edit tab -->
     <div *ngIf="activeTab() === 'edit'">
       <app-dataset-form></app-dataset-form>
     </div>

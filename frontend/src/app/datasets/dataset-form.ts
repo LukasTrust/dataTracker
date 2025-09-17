@@ -6,16 +6,7 @@ import {UiEventsService} from '../services/ui-events.service';
 import {Subscription} from 'rxjs';
 import {ApiService} from '../services/api.service';
 import {DateUtils} from '../services/date-utils';
-
-interface DatasetDto {
-  id?: number;
-  name: string;
-  description: string;
-  symbol: string;
-  targetValue?: number | null;
-  startDate?: string | null; // use ISO date string (YYYY-MM-DD)
-  endDate?: string | null;   // use ISO date string (YYYY-MM-DD)
-}
+import { MESSAGES, UI_TEXT} from '../services/message-service';
 
 @Component({
   selector: 'app-dataset-form',
@@ -81,9 +72,8 @@ export class DatasetForm implements OnInit, OnDestroy {
           endDate: end,
         });
       },
-      error: (err) => {
-        console.error('Failed to load dataset', err);
-        this.ui.showAlert('error', 'Failed to load dataset.');
+      error: () => {
+        this.ui.showAlert('error', MESSAGES.loadDatasetError);
       },
       complete: () => this.loading.set(false),
     });
@@ -113,21 +103,20 @@ export class DatasetForm implements OnInit, OnDestroy {
     if (this.isEditMode() && this.datasetId !== null) {
       this.api.put(`/datasets/${this.datasetId}`, dto).subscribe({
         next: () => {
-          this.ui.showAlert('success', 'Dataset updated successfully.');
+          this.ui.showAlert('success', MESSAGES.datasetUpdated);
           this.ui.requestSidebarRefresh();
           // Navigate back to the tabbed view (DatasetEntries)
           this.router.navigateByUrl(`/datasets/${this.datasetId}`).catch(() => this.router.navigateByUrl('/'));
         },
         error: (err) => {
-          console.error('Failed to update dataset', err);
-          this.ui.showAlert('error', 'Failed to update dataset.');
+          this.ui.showAlert('error', MESSAGES.datasetUpdateError);
         },
         complete: () => this.loading.set(false),
       });
     } else {
       this.api.post<{ id: number }>(`/datasets`, dto).subscribe({
         next: (res) => {
-          this.ui.showAlert('success', 'Dataset created successfully.');
+          this.ui.showAlert('success', MESSAGES.datasetCreated);
           const newId = (res && typeof res === 'object' && 'id' in res) ? Number((res).id) : null;
           this.ui.requestSidebarRefresh();
           if (newId) {
@@ -136,13 +125,32 @@ export class DatasetForm implements OnInit, OnDestroy {
             this.router.navigateByUrl('/').then();
           }
         },
-        error: (err) => {
-          console.error('Failed to create dataset', err);
-          this.ui.showAlert('error', 'Failed to create dataset.');
+        error: () => {
+          this.ui.showAlert('error', MESSAGES.datasetCreateError);
         },
         complete: () => this.loading.set(false),
       });
     }
+  }
+
+  onDelete(): void {
+    if (!this.isEditMode() || this.datasetId === null) {
+      return;
+    }
+
+    this.loading.set(true);
+    this.api.delete(`/datasets/${this.datasetId}`).subscribe({
+      next: () => {
+        this.ui.showAlert('success', MESSAGES.datasetDeleted);
+        this.ui.requestSidebarRefresh();
+        // Navigate back to the datasets list
+        this.router.navigateByUrl(`/`).catch(() => this.router.navigateByUrl('/'));
+      },
+      error: () => {
+        this.ui.showAlert('error', MESSAGES.datasetDeletedError);
+      },
+      complete: () => this.loading.set(false),
+    });
   }
 
   private toDto(): DatasetDto {
@@ -169,4 +177,16 @@ export class DatasetForm implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.sub?.unsubscribe();
   }
+
+  protected readonly UI_TEXT = UI_TEXT;
+}
+
+interface DatasetDto {
+  id?: number;
+  name: string;
+  description: string;
+  symbol: string;
+  targetValue?: number | null;
+  startDate?: string | null; // use ISO date string (YYYY-MM-DD)
+  endDate?: string | null;   // use ISO date string (YYYY-MM-DD)
 }
