@@ -7,6 +7,7 @@ import {Subscription} from 'rxjs';
 import {ApiService} from '../services/api.service';
 import {DateUtils} from '../services/date-utils';
 import { MESSAGES, UI_TEXT} from '../services/message-service';
+import {Dataset} from '../models/dataset-model';
 
 @Component({
   selector: 'app-dataset-form',
@@ -58,7 +59,7 @@ export class DatasetForm implements OnInit, OnDestroy {
 
   private fetchDataset(id: number): void {
     this.loading.set(true);
-    this.api.get<DatasetDto>(`/datasets/${id}`).subscribe({
+    this.api.get<Dataset>(`/datasets/${id}`).subscribe({
       next: (data) => {
         // Attempt to normalize dates to yyyy-MM-dd if present
         const start = data.startDate ? DateUtils.toDateInputValue(data.startDate) : null;
@@ -97,7 +98,7 @@ export class DatasetForm implements OnInit, OnDestroy {
       return;
     }
 
-    const dto: DatasetDto = this.toDto();
+    const dto: Dataset = this.toDataset();
 
     this.loading.set(true);
     if (this.isEditMode() && this.datasetId !== null) {
@@ -153,7 +154,7 @@ export class DatasetForm implements OnInit, OnDestroy {
     });
   }
 
-  private toDto(): DatasetDto {
+  private toDataset(): Dataset {
     const v = this.form.value as {
       name: string;
       description: string;
@@ -163,14 +164,16 @@ export class DatasetForm implements OnInit, OnDestroy {
       endDate: string | null;
     };
 
-    // Ensure empty strings become null for optional fields
     return {
       name: v.name?.trim(),
       description: (v.description ?? '').trim(),
       symbol: (v.symbol ?? '').trim(),
-      targetValue: v.targetValue === null || v.targetValue === undefined || v.targetValue === ('' as any) ? null : Number(v.targetValue),
-      startDate: v.startDate && v.startDate !== '' ? v.startDate : null,
-      endDate: v.endDate && v.endDate !== '' ? v.endDate : null,
+      targetValue:
+        v.targetValue === null || v.targetValue === undefined || v.targetValue === ('' as any)
+          ? null
+          : Number(v.targetValue),
+      startDate: v.startDate && v.startDate !== '' ? DateUtils.toISOString(v.startDate) : null,
+      endDate: v.endDate && v.endDate !== '' ? DateUtils.toISOString(v.endDate) : null,
     };
   }
 
@@ -179,14 +182,4 @@ export class DatasetForm implements OnInit, OnDestroy {
   }
 
   protected readonly UI_TEXT = UI_TEXT;
-}
-
-interface DatasetDto {
-  id?: number;
-  name: string;
-  description: string;
-  symbol: string;
-  targetValue?: number | null;
-  startDate?: string | null; // use ISO date string (YYYY-MM-DD)
-  endDate?: string | null;   // use ISO date string (YYYY-MM-DD)
 }

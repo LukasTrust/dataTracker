@@ -8,8 +8,8 @@ type Dataset struct {
 	Description string     `json:"description"`
 	Symbol      string     `json:"symbol"`
 	TargetValue *float64   `json:"targetValue"`
-	StartDate   *time.Time `json:"start_date"`
-	EndDate     *time.Time `json:"end_date"`
+	StartDate   *time.Time `json:"startDate,omitempty"`
+	EndDate     *time.Time `json:"endDate,omitempty"`
 }
 
 type Entry struct {
