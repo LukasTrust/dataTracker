@@ -39,7 +39,7 @@ func dbSetup() (*sql.DB, error) {
 }
 
 const (
-	port = ":8080"
+	port = ":8089"
 
 	// Route parts
 	routeDatasets  = "/datasets"
@@ -86,21 +86,8 @@ func httpSetup(db *sql.DB) error {
 
 // enableCors enables CORS for all routes
 func enableCors(next http.Handler) (http.Handler, error) {
-	host := "http://localhost"
-
-	prod, err := utils.GetEnvVariable("PRODUCTION")
-	if err != nil {
-		return nil, err
-	}
-
-	if prod != "True" && prod != "true" {
-		host = host + ":4200"
-	}
-
-	utils.Info("CORS origin: " + host)
-
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", host)
+		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 		if r.Method == "OPTIONS" {

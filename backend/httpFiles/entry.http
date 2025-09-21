@@ -1,5 +1,5 @@
 ### Create a new entry for a dataset
-POST http://localhost:8080/datasets/2/entries
+POST http://localhost:8089/datasets/2/entries
 Content-Type: application/json
 
 {
@@ -11,7 +11,7 @@ Content-Type: application/json
 ###
 
 ### Create a new entry for a dataset
-POST http://localhost:8080/datasets/2/entries
+POST http://localhost:8089/datasets/2/entries
 Content-Type: application/json
 
 {
@@ -23,7 +23,7 @@ Content-Type: application/json
 ###
 
 ### Create a new entry for a dataset
-POST http://localhost:8080/datasets/2/entries
+POST http://localhost:8089/datasets/2/entries
 Content-Type: application/json
 
 {
@@ -35,13 +35,13 @@ Content-Type: application/json
 ###
 
 ### List all entries for a dataset
-GET http://localhost:8080/datasets/2/entries
+GET http://localhost:8089/datasets/2/entries
 Accept: application/json
 
 ###
 
 ### Update an entry by ID
-PUT http://localhost:8080/entries/2
+PUT http://localhost:8089/entries/2
 Content-Type: application/json
 
 {
@@ -54,4 +54,4 @@ Content-Type: application/json
 ###
 
 ### Delete an entry by ID
-DELETE http://localhost:8080/entries/2
+DELETE http://localhost:8089/entries/2

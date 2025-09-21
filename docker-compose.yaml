@@ -19,7 +19,9 @@ services:
 
   backend:
     container_name: datatracker-backend
-    build: ./backend
+    build:
+      context: ./backend
+      network: host
     environment:
       PRODUCTION: "True"
       POSTGRES_USER: ${POSTGRES_USER}
@@ -31,13 +33,15 @@ services:
       db:
         condition: service_healthy
     ports:
-      - "8080:8080"
+      - "8089:8080"
 
   frontend:
     container_name: datatracker-frontend
-    build: ./frontend
+    build:
+      context: ./frontend
+      network: host
     ports:
-      - "80:80"
+      - "89:80"
     depends_on:
       - backend
 
