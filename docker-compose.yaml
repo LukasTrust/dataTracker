@@ -16,6 +16,8 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
+    networks:
+      - dataTracker-network
 
   backend:
     container_name: datatracker-backend
@@ -32,6 +34,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    networks:
+      - dataTracker-network
 
   frontend:
     container_name: datatracker-frontend
@@ -42,6 +46,11 @@ services:
       - "89:80"
     depends_on:
       - backend
+    networks:
+      - dataTracker-network
 
 volumes:
   db_data:
+
+networks:
+  dataTracker-network:
