@@ -55,7 +55,7 @@ func httpSetup(db *sql.DB) error {
 	r := mux.NewRouter()
 	h := &handlers.Handler{DB: db}
 
-	// Dataset subroutine
+	// Dataset routes
 	datasetRouter := r.PathPrefix(routeDatasets).Subrouter()
 	datasetRouter.HandleFunc("", h.CreateDatasetHandler).Methods(http.MethodPost)
 	datasetRouter.HandleFunc("", h.ListDatasetsHandler).Methods(http.MethodGet)
@@ -63,37 +63,32 @@ func httpSetup(db *sql.DB) error {
 	datasetRouter.HandleFunc(routeID, h.UpdateDatasetHandler).Methods(http.MethodPut)
 	datasetRouter.HandleFunc(routeID, h.DeleteDatasetHandler).Methods(http.MethodDelete)
 
-	// Entry subroutine (scoped under dataset)
+	// Entries under dataset
 	entryRouter := datasetRouter.PathPrefix(routeDatasetID + routeEntries).Subrouter()
 	entryRouter.HandleFunc("", h.CreateEntryHandler).Methods(http.MethodPost)
 	entryRouter.HandleFunc("", h.ListEntriesHandler).Methods(http.MethodGet)
 	entryRouter.HandleFunc(projected+"/target", h.ProjectedUntilTargetHandler).Methods(http.MethodGet)
 	entryRouter.HandleFunc(projected+"/endDate", h.ProjectedUntilEndDateHandler).Methods(http.MethodGet)
 
-	// Entry routes by ID (not scoped under dataset)
+	// Entries by ID
 	r.HandleFunc(routeEntries+routeID, h.UpdateEntryHandler).Methods(http.MethodPut)
 	r.HandleFunc(routeEntries+routeID, h.DeleteEntryHandler).Methods(http.MethodDelete)
 
-	// Wrap the router with CORS middleware
-	corsRouter, err := enableCors(r)
-	if err != nil {
-		return err
-	}
-
 	utils.Success(fmt.Sprintf("Server starting on port %s", port))
-	return http.ListenAndServe(port, corsRouter)
+	return http.ListenAndServe(port, enableCors(r))
 }
 
 // enableCors enables CORS for all routes
-func enableCors(next http.Handler) (http.Handler, error) {
+func enableCors(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-		if r.Method == "OPTIONS" {
+		h := w.Header()
+		h.Set("Access-Control-Allow-Origin", "*")
+		h.Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		h.Set("Access-Control-Allow-Headers", "Content-Type")
+		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusOK)
 			return
 		}
 		next.ServeHTTP(w, r)
-	}), nil
+	})
 }

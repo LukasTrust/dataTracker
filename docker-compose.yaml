@@ -23,6 +23,7 @@ services:
     container_name: datatracker-backend
     build:
       context: ./backend
+      network: host
     restart: unless-stopped
     environment:
       PRODUCTION: "True"
@@ -32,8 +33,8 @@ services:
       POSTGRES_PORT: ${POSTGRES_PORT}
       DB_HOST: db
     depends_on:
-      db:
-        condition: service_healthy
+        db:
+          condition: service_healthy
     networks:
       - dataTracker-network
     expose:
@@ -43,6 +44,7 @@ services:
     container_name: datatracker-frontend
     build:
       context: ./frontend
+      network: host
     restart: unless-stopped
     ports:
       - "80:80"

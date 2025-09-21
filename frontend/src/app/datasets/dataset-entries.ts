@@ -1,15 +1,15 @@
-import { Component, OnDestroy, OnInit, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
-import { UiEventsService } from '../services/ui-events.service';
-import { Entry } from '../models/entry-model';
-import { DatasetForm } from './dataset-form';
-import { Subscription } from 'rxjs';
-import { ApiService } from '../services/api.service';
-import { DateUtils } from '../services/date-utils';
+import {Component, OnDestroy, OnInit, signal} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {FormsModule, ReactiveFormsModule} from '@angular/forms';
+import {ActivatedRoute} from '@angular/router';
+import {UiEventsService} from '../services/ui-events.service';
+import {Entry} from '../models/entry-model';
+import {DatasetForm} from './dataset-form';
+import {Subscription} from 'rxjs';
+import {ApiService} from '../services/api.service';
+import {DateUtils} from '../services/date-utils';
 import {Color, LegendPosition, NgxChartsModule, ScaleType} from '@swimlane/ngx-charts';
-import { MESSAGES, UI_TEXT} from '../services/message-service';
+import {MESSAGES, UI_TEXT} from '../services/message-service';
 
 type GraphType = 'actual' | 'target' | 'endDate';
 
@@ -28,7 +28,7 @@ export class DatasetEntries implements OnInit, OnDestroy {
 
   entries: Entry[] = [];
   entriesLoading = signal<boolean>(false);
-  newEntry: { value: number | null; label: string; date: string } = { value: null, label: '', date: '' };
+  newEntry: { value: number | null; label: string; date: string } = {value: null, label: '', date: ''};
 
   // Dataset meta
   datasetSymbol: string = '';
@@ -54,7 +54,8 @@ export class DatasetEntries implements OnInit, OnDestroy {
     private readonly route: ActivatedRoute,
     private readonly api: ApiService,
     private readonly ui: UiEventsService,
-  ) {}
+  ) {
+  }
 
   ngOnInit(): void {
     const hash = window.location.hash?.replace('#', '');
@@ -86,9 +87,12 @@ export class DatasetEntries implements OnInit, OnDestroy {
     this.entriesLoading.set(true);
     this.api.get<Entry[]>(`/datasets/${datasetId}/entries`).subscribe({
       next: (rows) => {
-        this.entries = (rows || []).map((r) => ({ ...r, date: r.date ? DateUtils.toDateInputValue(r.date as any) : '' }));
+        this.entries = (rows || []).map((r) => ({...r, date: r.date ? DateUtils.toDateInputValue(r.date as any) : ''}));
       },
-      error: () => this.ui.showAlert('error', MESSAGES.loadEntriesError),
+      error: (err) => {
+        console.error('Error loading entries:', err);
+        this.ui.showAlert('error', MESSAGES.loadEntriesError)
+      },
       complete: () => this.entriesLoading.set(false),
     });
   }
@@ -103,7 +107,7 @@ export class DatasetEntries implements OnInit, OnDestroy {
       return;
     }
 
-    const payload = { value: Number(value), label, date: DateUtils.toISOString(date) };
+    const payload = {value: Number(value), label, date: DateUtils.toISOString(date)};
 
     this.api.post<Entry>(`/datasets/${this.datasetId}/entries`, payload).subscribe({
       next: (res) => {
@@ -116,7 +120,10 @@ export class DatasetEntries implements OnInit, OnDestroy {
         }
         this.resetNewEntry();
       },
-      error: () => this.ui.showAlert('error', MESSAGES.entryCreateError),
+      error: (err) => {
+        console.error('Error adding entry:', err);
+        this.ui.showAlert('error', MESSAGES.entryCreateError)
+      },
     });
   }
 
@@ -131,7 +138,10 @@ export class DatasetEntries implements OnInit, OnDestroy {
     };
     this.api.put(`/entries/${entry.id}`, payload).subscribe({
       next: () => this.ui.showAlert('success', MESSAGES.entryUpdated),
-      error: () => this.ui.showAlert('error', MESSAGES.entryUpdateError),
+      error: (err) => {
+        console.error('Error updating entry:', err);
+        this.ui.showAlert('error', MESSAGES.entryUpdateError)
+      },
     });
   }
 
@@ -141,12 +151,15 @@ export class DatasetEntries implements OnInit, OnDestroy {
         this.ui.showAlert('success', MESSAGES.entryDeleted);
         this.entries = this.entries.filter((e) => e.id !== entry.id);
       },
-      error: () => this.ui.showAlert('error', MESSAGES.entryDeleteError),
+      error: (err) => {
+        console.error('Error deleting entry:', err);
+        this.ui.showAlert('error', MESSAGES.entryDeleteError)
+      },
     });
   }
 
   protected resetNewEntry(): void {
-    this.newEntry = { value: null, label: '', date: '' };
+    this.newEntry = {value: null, label: '', date: ''};
   }
 
   // ===== Graph logic =====
@@ -174,7 +187,10 @@ export class DatasetEntries implements OnInit, OnDestroy {
           .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
         this.prepareChartData();
       },
-      error: () => this.ui.showAlert('error', MESSAGES.graphLoadError),
+      error: (err) => {
+        console.error('Error loading graph:', err);
+        this.ui.showAlert('error', MESSAGES.graphLoadError)
+      },
       complete: () => this.graphLoading.set(false),
     });
   }
@@ -185,29 +201,34 @@ export class DatasetEntries implements OnInit, OnDestroy {
         this.datasetSymbol = d?.symbol ?? '';
         this.datasetName = d?.name ?? '';
       },
-      error: () => this.ui.showAlert('error', MESSAGES.datasetMetaError),
+      error: (err) => {
+        console.error('Error loading dataset meta:', err);
+        this.ui.showAlert('error', MESSAGES.datasetMetaError)},
     });
   }
 
   private prepareChartData(): void {
     const actualSeries = this.graphEntries
       .filter((e) => !e.projected)
-      .map((e) => ({ name: new Date(e.date).toLocaleDateString(), value: Number(e.value) }));
+      .map((e) => ({name: new Date(e.date).toLocaleDateString(), value: Number(e.value)}));
 
     const projectedSeries = this.graphEntries
       .filter((e) => e.projected)
-      .map((e) => ({ name: new Date(e.date).toLocaleDateString(), value: Number(e.value) }));
+      .map((e) => ({name: new Date(e.date).toLocaleDateString(), value: Number(e.value)}));
 
     this.chartData = [
-      { name: MESSAGES.actual, series: actualSeries },
-      { name: MESSAGES.projected, series: projectedSeries },
+      {name: MESSAGES.actual, series: actualSeries},
+      {name: MESSAGES.projected, series: projectedSeries},
     ];
   }
 
   openPicker(event: Event): void {
     const input = event.target as HTMLInputElement | null;
     if (input && typeof (input as any).showPicker === 'function') {
-      try { (input as any).showPicker(); } catch {}
+      try {
+        (input as any).showPicker();
+      } catch {
+      }
     } else {
       input?.focus();
     }

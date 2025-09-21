@@ -73,7 +73,8 @@ export class DatasetForm implements OnInit, OnDestroy {
           endDate: end,
         });
       },
-      error: () => {
+      error: (err) => {
+        console.error('Error loading dataset:', err);
         this.ui.showAlert('error', MESSAGES.loadDatasetError);
       },
       complete: () => this.loading.set(false),
@@ -109,7 +110,8 @@ export class DatasetForm implements OnInit, OnDestroy {
           // Navigate back to the tabbed view (DatasetEntries)
           this.router.navigateByUrl(`/datasets/${this.datasetId}`).catch(() => this.router.navigateByUrl('/'));
         },
-        error: () => {
+        error: (err) => {
+          console.error('Error updating dataset:', err);
           this.ui.showAlert('error', MESSAGES.datasetUpdateError);
         },
         complete: () => this.loading.set(false),
@@ -126,7 +128,8 @@ export class DatasetForm implements OnInit, OnDestroy {
             this.router.navigateByUrl('/').then();
           }
         },
-        error: () => {
+        error: (err) => {
+          console.error('Error creating dataset:', err);
           this.ui.showAlert('error', MESSAGES.datasetCreateError);
         },
         complete: () => this.loading.set(false),
@@ -147,7 +150,8 @@ export class DatasetForm implements OnInit, OnDestroy {
         // Navigate back to the datasets list
         this.router.navigateByUrl(`/`).catch(() => this.router.navigateByUrl('/'));
       },
-      error: () => {
+      error: (err) => {
+        console.error('Error deleting dataset:', err);
         this.ui.showAlert('error', MESSAGES.datasetDeletedError);
       },
       complete: () => this.loading.set(false),
