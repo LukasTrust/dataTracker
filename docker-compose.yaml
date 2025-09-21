@@ -32,8 +32,6 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    ports:
-      - "8089:8080"
 
   frontend:
     container_name: datatracker-frontend

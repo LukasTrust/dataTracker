@@ -39,7 +39,7 @@ func dbSetup() (*sql.DB, error) {
 }
 
 const (
-	port = ":8089"
+	port = ":8080"
 
 	// Route parts
 	routeDatasets  = "/datasets"
