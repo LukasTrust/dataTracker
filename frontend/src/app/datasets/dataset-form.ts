@@ -142,19 +142,31 @@ export class DatasetForm implements OnInit, OnDestroy {
       return;
     }
 
-    this.loading.set(true);
-    this.api.delete(`/datasets/${this.datasetId}`).subscribe({
-      next: () => {
-        this.ui.showAlert('success', MESSAGES.datasetDeleted);
-        this.ui.requestSidebarRefresh();
-        // Navigate back to the datasets list
-        this.router.navigateByUrl(`/`).catch(() => this.router.navigateByUrl('/'));
-      },
-      error: (err) => {
-        console.error('Error deleting dataset:', err);
-        this.ui.showAlert('error', MESSAGES.datasetDeletedError);
-      },
-      complete: () => this.loading.set(false),
+    // Show confirmation dialog
+    this.ui.showDialog({
+      header: this.UI_TEXT.headers.confirmDelete,
+      message: this.UI_TEXT.labels.confirmDeleteDataset,
+      leftButtonText: this.UI_TEXT.buttons.cancel,
+      rightButtonText: this.UI_TEXT.buttons.confirm
+    });
+
+    const sub = this.ui.dialogResult$.subscribe((result) => {
+      if (result === 'right') {
+        this.loading.set(true);
+        this.api.delete(`/datasets/${this.datasetId}`).subscribe({
+          next: () => {
+            this.ui.showAlert('success', MESSAGES.datasetDeleted);
+            this.ui.requestSidebarRefresh();
+            this.router.navigateByUrl(`/`).catch(() => this.router.navigateByUrl('/'));
+          },
+          error: (err) => {
+            console.error('Error deleting dataset:', err);
+            this.ui.showAlert('error', MESSAGES.datasetDeletedError);
+          },
+          complete: () => this.loading.set(false),
+        });
+      }
+      sub.unsubscribe(); // clean up
     });
   }
 

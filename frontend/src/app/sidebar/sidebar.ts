@@ -2,7 +2,7 @@ import {CommonModule} from '@angular/common';
 import {Component, OnInit, input, output} from '@angular/core';
 import {RouterModule} from '@angular/router';
 import {Dataset} from '../models/dataset-model';
-import { UiEventsService } from '../services/ui-events.service';
+import {AlertType, UiEventsService} from '../services/ui-events.service';
 import { MESSAGES, UI_TEXT} from '../services/message-service';
 import {ApiService} from '../services/api.service';
 
@@ -17,7 +17,7 @@ export class Sidebar implements OnInit {
   isSidebarCollapsed = input.required<boolean>();
   changeIsSidebarCollapsed = output<boolean>();
   // Emits alerts to the parent (App)
-  notify = output<{ type: 'info' | 'error' | 'success'; message: string }>();
+  notify = output<{ type: AlertType; message: string }>();
 
   constructor(private readonly api: ApiService, private readonly ui: UiEventsService) {}
 

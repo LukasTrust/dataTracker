@@ -87,11 +87,16 @@ export class DatasetEntries implements OnInit, OnDestroy {
     this.entriesLoading.set(true);
     this.api.get<Entry[]>(`/datasets/${datasetId}/entries`).subscribe({
       next: (rows) => {
-        this.entries = (rows || []).map((r) => ({...r, date: r.date ? DateUtils.toDateInputValue(r.date as any) : ''}));
+        this.entries = (rows || [])
+          .map((r) => ({
+            ...r,
+            date: r.date ? DateUtils.toDateInputValue(r.date as any) : ''
+          }))
+          .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
       },
       error: (err) => {
         console.error('Error loading entries:', err);
-        this.ui.showAlert('error', MESSAGES.loadEntriesError)
+        this.ui.showAlert('error', MESSAGES.loadEntriesError);
       },
       complete: () => this.entriesLoading.set(false),
     });
@@ -146,17 +151,30 @@ export class DatasetEntries implements OnInit, OnDestroy {
   }
 
   deleteEntry(entry: Entry): void {
-    this.api.delete(`/entries/${entry.id}`).subscribe({
-      next: () => {
-        this.ui.showAlert('success', MESSAGES.entryDeleted);
-        this.entries = this.entries.filter((e) => e.id !== entry.id);
-      },
-      error: (err) => {
-        console.error('Error deleting entry:', err);
-        this.ui.showAlert('error', MESSAGES.entryDeleteError)
-      },
+    this.ui.showDialog({
+      header: this.UI_TEXT.headers.confirmDelete,
+      message: this.UI_TEXT.labels.confirmDeleteEntry,
+      leftButtonText: this.UI_TEXT.buttons.cancel,
+      rightButtonText: this.UI_TEXT.buttons.confirm
+    });
+
+    const sub = this.ui.dialogResult$.subscribe((result) => {
+      if (result === 'right') {
+        this.api.delete(`/entries/${entry.id}`).subscribe({
+          next: () => {
+            this.ui.showAlert('success', MESSAGES.entryDeleted);
+            this.entries = this.entries.filter((e) => e.id !== entry.id);
+          },
+          error: (err) => {
+            console.error('Error deleting entry:', err);
+            this.ui.showAlert('error', MESSAGES.entryDeleteError);
+          },
+        });
+      }
+      sub.unsubscribe(); // cleanup after one response
     });
   }
+
 
   protected resetNewEntry(): void {
     this.newEntry = {value: null, label: '', date: ''};

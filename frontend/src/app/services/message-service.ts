@@ -17,7 +17,7 @@ export const MESSAGES = {
   graphLoadError: 'Das Laden der Diagrammdaten ist fehlgeschlagen.',
   datasetMetaError: 'Die Datensatzdetails konnten nicht geladen werden.',
   actual: 'Reale Werte',
-  projected: 'Projektierte Werte',
+  projected: 'Projektierte Werte'
 };
 
 export const UI_TEXT = {
@@ -33,6 +33,7 @@ export const UI_TEXT = {
     },
     edit: 'Bearbeiten',
     chartNoData: 'Keine Daten zum Anzeigen.',
+    confirmDelete: 'Wollen Sie das wirklich löschen?',
   },
   labels: {
     name: 'Name',
@@ -41,6 +42,8 @@ export const UI_TEXT = {
     targetValue: 'Zielwert',
     startDate: 'Startdatum',
     endDate: 'Enddatum',
+    confirmDeleteDataset: 'Bestätigen Sie das löschen des Datensatzes.',
+    confirmDeleteEntry: 'Bestätigen Sie das löschen des Eintrags.',
   },
   tabs: {
     data: 'Daten',
@@ -64,6 +67,8 @@ export const UI_TEXT = {
     delete: 'Löschen',
     create: 'Erstellen',
     update: 'Aktualisieren',
+    cancel: 'Abbrechen',
+    confirm: 'Bestätigen'
   },
   placeholders: {
     label: 'Bezeichnung',

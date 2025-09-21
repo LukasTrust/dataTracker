@@ -2,7 +2,7 @@ import {Component, HostListener, OnInit, signal} from '@angular/core';
 import {Sidebar} from './sidebar/sidebar';
 import {MainContent} from './main-content/main-content';
 import {Alert} from './alert/alert';
-import { UiEventsService } from './services/ui-events.service';
+import {AlertType, UiEventsService} from './services/ui-events.service';
 
 @Component({
   selector: 'app-root',
@@ -16,7 +16,7 @@ export class App implements OnInit  {
 
   showAlert = signal<boolean>(false);
   alertMessage = signal<string>('');
-  alertType = signal<'info' | 'error' | 'success'>('info');
+  alertType = signal<AlertType>('info');
 
   constructor(private readonly ui: UiEventsService) {}
 
@@ -42,7 +42,7 @@ export class App implements OnInit  {
     this.isSidebarCollapsed.set(isSidebarCollapsed);
   }
 
-  onNotify(event: { type: 'info' | 'error' | 'success'; message: string }): void {
+  onNotify(event: { type: AlertType; message: string }): void {
     // Keep backward compatibility for Sidebar notify
     this.alertType.set(event.type);
     this.alertMessage.set(event.message);

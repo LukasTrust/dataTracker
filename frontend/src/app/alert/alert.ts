@@ -1,5 +1,6 @@
 import { Component, Input, OnChanges, SimpleChanges, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import {AlertType} from '../services/ui-events.service';
 
 @Component({
   selector: 'app-alert',
@@ -10,7 +11,7 @@ import { CommonModule } from '@angular/common';
 })
 export class Alert implements OnChanges {
   @Input() show: boolean = false;
-  @Input() alertType: 'info' | 'error' | 'success' = 'info';
+  @Input() alertType: AlertType = 'info';
   @Input() alertMessage: string = '';
 
   // Emits when the alert auto-hides or is manually closed
