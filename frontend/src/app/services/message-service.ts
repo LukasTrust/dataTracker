@@ -70,7 +70,8 @@ export const UI_TEXT = {
     create: 'Erstellen',
     update: 'Aktualisieren',
     cancel: 'Abbrechen',
-    confirm: 'Bestätigen'
+    confirm: 'Bestätigen',
+    createCopy: 'Kopie erstellen',
   },
   placeholders: {
     label: 'Bezeichnung',
