@@ -1,20 +1,22 @@
-import {Component, OnInit, signal, OnDestroy} from '@angular/core';
-import {CommonModule} from '@angular/common';
-import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
-import {ActivatedRoute, Router, RouterModule} from '@angular/router';
-import {UiEventsService} from '../services/ui-events.service';
-import {filter, Subscription, take} from 'rxjs';
-import {ApiService} from '../services/api.service';
-import {DateUtils} from '../services/date-utils';
-import { MESSAGES, UI_TEXT} from '../services/message-service';
-import {Dataset} from '../models/dataset-model';
+import { Component, OnInit, OnDestroy, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import {Subscription, filter, take, forkJoin, catchError, of} from 'rxjs';
+
+import { UiEventsService } from '../services/ui-events.service';
+import { ApiService } from '../services/api.service';
+import { DateUtils } from '../services/date-utils';
+import { MESSAGES, UI_TEXT } from '../services/message-service';
+
+import { Dataset } from '../models/dataset-model';
 
 @Component({
   selector: 'app-dataset-form',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, RouterModule],
   templateUrl: './dataset-form.html',
-  styleUrl: './dataset-form.css'
+  styleUrl: './dataset-form.css',
 })
 export class DatasetForm implements OnInit, OnDestroy {
   form!: FormGroup;
@@ -29,19 +31,12 @@ export class DatasetForm implements OnInit, OnDestroy {
     private readonly api: ApiService,
     private readonly route: ActivatedRoute,
     private readonly router: Router,
-    private readonly ui: UiEventsService,
-  ) {
-  }
+    private readonly ui: UiEventsService
+  ) {}
 
+  // ===== Lifecycle =====
   ngOnInit(): void {
-    this.form = this.fb.group({
-      name: ['', [Validators.required, Validators.maxLength(255)]],
-      description: ['', [Validators.maxLength(2000)]],
-      symbol: ['', [Validators.required, Validators.maxLength(50)]],
-      targetValue: [null as number | null],
-      startDate: [null as string | null], // yyyy-MM-dd
-      endDate: [null as string | null],   // yyyy-MM-dd
-    });
+    this.initForm();
 
     this.sub = this.route.paramMap.subscribe((pm) => {
       const idParam = pm.get('id');
@@ -50,49 +45,60 @@ export class DatasetForm implements OnInit, OnDestroy {
         this.datasetId = Number(idParam);
         this.fetchDataset(this.datasetId);
       } else {
-        this.isEditMode.set(false);
-        this.datasetId = null;
-        this.form.reset({name: '', description: '', symbol: '', targetValue: null, startDate: null, endDate: null});
+        this.resetForm();
       }
     });
   }
 
+  ngOnDestroy(): void {
+    this.sub?.unsubscribe();
+  }
+
+  // ===== Init & Reset =====
+  private initForm(): void {
+    this.form = this.fb.group({
+      name: ['', [Validators.required, Validators.maxLength(255)]],
+      description: ['', [Validators.maxLength(2000)]],
+      symbol: ['', [Validators.required, Validators.maxLength(50)]],
+      targetValue: [null as number | null],
+      startDate: [null as string | null],
+      endDate: [null as string | null],
+    });
+  }
+
+  private resetForm(): void {
+    this.isEditMode.set(false);
+    this.datasetId = null;
+    this.form.reset({
+      name: '',
+      description: '',
+      symbol: '',
+      targetValue: null,
+      startDate: null,
+      endDate: null,
+    });
+  }
+
+  // ===== Fetch dataset =====
   private fetchDataset(id: number): void {
     this.loading.set(true);
     this.api.get<Dataset>(`/datasets/${id}`).subscribe({
       next: (data) => {
-        // Attempt to normalize dates to yyyy-MM-dd if present
-        const start = data.startDate ? DateUtils.toDateInputValue(data.startDate) : null;
-        const end = data.endDate ? DateUtils.toDateInputValue(data.endDate) : null;
         this.form.patchValue({
           name: data.name ?? '',
           description: data.description ?? '',
           symbol: data.symbol ?? '',
           targetValue: data.targetValue ?? null,
-          startDate: start,
-          endDate: end,
+          startDate: data.startDate ? DateUtils.toDateInputValue(data.startDate) : null,
+          endDate: data.endDate ? DateUtils.toDateInputValue(data.endDate) : null,
         });
       },
-      error: (err) => {
-        console.error('Error loading dataset:', err);
-        this.ui.showAlert('error', MESSAGES.loadDatasetError);
-      },
+      error: (err) => this.handleError(err, MESSAGES.loadDatasetError),
       complete: () => this.loading.set(false),
     });
   }
 
-  openPicker(event: Event): void {
-    const input = event.target as HTMLInputElement | null;
-    if (input && typeof (input as any).showPicker === 'function') {
-      try {
-        (input as any).showPicker();
-      } catch {
-      }
-    } else {
-      input?.focus();
-    }
-  }
-
+  // ===== Submit logic =====
   submit(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
@@ -100,47 +106,52 @@ export class DatasetForm implements OnInit, OnDestroy {
     }
 
     const dto: Dataset = this.toDataset();
-
     this.loading.set(true);
-    if (this.isEditMode() && this.datasetId !== null) {
-      this.api.put(`/datasets/${this.datasetId}`, dto).subscribe({
-        next: () => {
-          this.ui.showAlert('success', MESSAGES.datasetUpdated);
-          this.ui.requestSidebarRefresh();
-          // Navigate back to the tabbed view (DatasetEntries)
-          this.router.navigateByUrl(`/datasets/${this.datasetId}`).catch(() => this.router.navigateByUrl('/'));
-        },
-        error: (err) => {
-          console.error('Error updating dataset:', err);
-          this.ui.showAlert('error', MESSAGES.datasetUpdateError);
-        },
-        complete: () => this.loading.set(false),
-      });
+
+    if (this.isEditMode() && this.datasetId) {
+      this.updateDataset(dto);
     } else {
-      this.api.post<{ id: number }>(`/datasets`, dto).subscribe({
-        next: (res) => {
-          this.ui.showAlert('success', MESSAGES.datasetCreated);
-          const newId = (res && typeof res === 'object' && 'id' in res) ? Number((res).id) : null;
-          this.ui.requestSidebarRefresh();
-          if (newId) {
-            this.router.navigateByUrl(`/datasets/${newId}`).catch(() => this.router.navigateByUrl('/'));
-          } else {
-            this.router.navigateByUrl('/').then();
-          }
-        },
-        error: (err) => {
-          console.error('Error creating dataset:', err);
-          this.ui.showAlert('error', MESSAGES.datasetCreateError);
-        },
-        complete: () => this.loading.set(false),
-      });
+      this.createDataset(dto);
     }
   }
 
+  private updateDataset(dto: Dataset): void {
+    this.api.put(`/datasets/${this.datasetId}`, dto).subscribe({
+      next: () => {
+        this.ui.showAlert('success', MESSAGES.datasetUpdated);
+        this.ui.requestSidebarRefresh();
+        this.router
+          .navigateByUrl(`/datasets/${this.datasetId}`)
+          .catch(() => this.router.navigateByUrl('/'));
+      },
+      error: (err) => this.handleError(err, MESSAGES.datasetUpdateError),
+      complete: () => this.loading.set(false),
+    });
+  }
+
+  private createDataset(dto: Dataset): void {
+    this.api.post<{ id: number }>(`/datasets`, dto).subscribe({
+      next: (res) => {
+        this.ui.showAlert('success', MESSAGES.datasetCreated);
+        this.ui.requestSidebarRefresh();
+
+        const newId = res?.id ? Number(res.id) : null;
+        if (newId) {
+          this.router
+            .navigateByUrl(`/datasets/${newId}`)
+            .catch(() => this.router.navigateByUrl('/'));
+        } else {
+          this.router.navigateByUrl('/').then();
+        }
+      },
+      error: (err) => this.handleError(err, MESSAGES.datasetCreateError),
+      complete: () => this.loading.set(false),
+    });
+  }
+
+  // ===== Delete logic =====
   onDelete(): void {
-    if (!this.isEditMode() || this.datasetId === null) {
-      return;
-    }
+    if (!this.isEditMode() || !this.datasetId) return;
 
     this.ui.showDialog({
       header: UI_TEXT.headers.confirmDelete,
@@ -150,38 +161,30 @@ export class DatasetForm implements OnInit, OnDestroy {
     });
 
     this.ui.dialogResult$
-      .pipe(
-        take(1),
-        filter(result => result === 'right')
-      )
+      .pipe(take(1), filter((res) => res === 'right'))
       .subscribe(() => {
         this.loading.set(true);
         this.api.delete(`/datasets/${this.datasetId}`).subscribe({
           next: () => {
             this.ui.showAlert('success', MESSAGES.datasetDeleted);
             this.ui.requestSidebarRefresh();
-            this.router.navigateByUrl('/').catch(() => this.router.navigateByUrl('/'));
+            this.router
+              .navigateByUrl('/')
+              .catch(() => this.router.navigateByUrl('/'));
           },
-          error: (err) => {
-            console.error('Error deleting dataset:', err);
-            this.ui.showAlert('error', MESSAGES.datasetDeleteError);
-          },
+          error: (err) => this.handleError(err, MESSAGES.datasetDeleteError),
           complete: () => this.loading.set(false),
         });
       });
   }
 
+  // ===== Copy logic =====
   createCopy(): void {
-    if (!this.isEditMode() || this.datasetId === null) {
-      return;
-    }
+    if (!this.isEditMode() || !this.datasetId) return;
 
-    const dto = this.toDataset();
-    dto.name = `${dto.name} - 2`; // Add " - 2" to the name
-
+    const dto = { ...this.toDataset(), name: `${this.form.value.name} - 2` };
     this.loading.set(true);
 
-    // Step 1: create a new dataset
     this.api.post<{ id: number }>(`/datasets`, dto).subscribe({
       next: (res) => {
         const newId = res?.id ? Number(res.id) : null;
@@ -191,58 +194,55 @@ export class DatasetForm implements OnInit, OnDestroy {
           return;
         }
 
-        // Step 2: fetch existing entries from old dataset
-        this.api.get<any[]>(`/datasets/${this.datasetId}/entries`).subscribe({
-          next: (entries) => {
-            if (entries && entries.length > 0) {
-              // Step 3: bulk copy entries
-              const copyCalls = entries.map((entry) => {
-                const payload = {
-                  value: entry.value,
-                  label: entry.label,
-                  date: entry.date ? DateUtils.toISOString(entry.date) : null,
-                };
-                return this.api.post(`/datasets/${newId}/entries`, payload);
-              });
+        this.copyEntries(newId);
+      },
+      error: (err) => this.handleError(err, MESSAGES.datasetCreateError),
+    });
+  }
 
-              // Execute entry copy calls
-              Promise.all(copyCalls.map(obs => obs.toPromise()))
-                .then(() => {
-                  this.ui.showAlert('success', MESSAGES.datasetCopied || 'Dataset copied successfully');
-                  this.ui.requestSidebarRefresh();
-                  this.router.navigateByUrl(`/datasets/${newId}`).catch(() => this.router.navigateByUrl('/'));
-                })
-                .catch((err) => {
-                  console.error('Error copying entries:', err);
-                  this.ui.showAlert('error', MESSAGES.entryCopyError || 'Error copying dataset entries');
-                  this.router.navigateByUrl(`/datasets/${newId}`).catch(() => this.router.navigateByUrl('/'));
-                })
-                .finally(() => this.loading.set(false));
-            } else {
-              // No entries to copy, just redirect
-              this.ui.showAlert('success', MESSAGES.datasetCopied || 'Dataset copied successfully');
-              this.ui.requestSidebarRefresh();
-              this.router.navigateByUrl(`/datasets/${newId}`).catch(() => this.router.navigateByUrl('/'));
-              this.loading.set(false);
-            }
-          },
-          error: (err) => {
-            console.error('Error fetching entries for copy:', err);
-            this.ui.showAlert('error', MESSAGES.entryCopyError || 'Error copying dataset entries');
-            this.router.navigateByUrl(`/datasets/${newId}`).catch(() => this.router.navigateByUrl('/'));
-            this.loading.set(false);
-          },
-        });
+  private copyEntries(newId: number): void {
+    this.api.get<any[]>(`/datasets/${this.datasetId}/entries`).subscribe({
+      next: (entries) => {
+        if (entries?.length) {
+          const calls = entries.map((e) =>
+            this.api.post(`/datasets/${newId}/entries`, {
+              value: e.value,
+              label: e.label,
+              date: e.date ? DateUtils.toISOString(e.date) : null,
+            }).pipe(
+              catchError((err) => {
+                console.error('Error copying entry:', err);
+                return of(null); // keep forkJoin alive
+              })
+            )
+          );
+
+          forkJoin(calls).subscribe({
+            next: () => this.finishCopy(newId, true),
+            error: (err) => {
+              console.error('Error during entries copy:', err);
+              this.finishCopy(newId, false);
+            },
+          });
+        } else {
+          this.finishCopy(newId, true);
+        }
       },
       error: (err) => {
-        console.error('Error creating dataset copy:', err);
-        this.ui.showAlert('error', MESSAGES.datasetCreateError);
-        this.loading.set(false);
+        console.error('Error fetching entries for copy:', err);
+        this.finishCopy(newId, false);
       },
     });
   }
 
+  private finishCopy(newId: number, success: boolean): void {
+    this.ui.showAlert(success ? 'success' : 'error', success ? MESSAGES.datasetCopied : MESSAGES.entryCopyError);
+    this.ui.requestSidebarRefresh();
+    this.router.navigateByUrl(`/datasets/${newId}`).catch(() => this.router.navigateByUrl('/'));
+    this.loading.set(false);
+  }
 
+  // ===== Helpers =====
   private toDataset(): Dataset {
     const v = this.form.value as {
       name: string;
@@ -257,18 +257,28 @@ export class DatasetForm implements OnInit, OnDestroy {
       name: v.name?.trim(),
       description: (v.description ?? '').trim(),
       symbol: (v.symbol ?? '').trim(),
-      targetValue:
-        v.targetValue === null || v.targetValue === undefined || v.targetValue === ('' as any)
-          ? null
-          : Number(v.targetValue),
-      startDate: v.startDate && v.startDate !== '' ? DateUtils.toISOString(v.startDate) : null,
-      endDate: v.endDate && v.endDate !== '' ? DateUtils.toISOString(v.endDate) : null,
+      targetValue: v.targetValue != null && v.targetValue !== ('' as any) ? Number(v.targetValue) : null,
+      startDate: v.startDate ? DateUtils.toISOString(v.startDate) : null,
+      endDate: v.endDate ? DateUtils.toISOString(v.endDate) : null,
     };
   }
 
-  ngOnDestroy(): void {
-    this.sub?.unsubscribe();
+  private handleError(err: any, message: string): void {
+    console.error(err);
+    this.ui.showAlert('error', message);
   }
 
+  openPicker(event: Event): void {
+    const input = event.target as HTMLInputElement | null;
+    if (input && typeof (input as any).showPicker === 'function') {
+      try {
+        (input as any).showPicker();
+      } catch {}
+    } else {
+      input?.focus();
+    }
+  }
+
+  // UI constants
   protected readonly UI_TEXT = UI_TEXT;
 }
