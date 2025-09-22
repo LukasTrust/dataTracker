@@ -1,10 +1,14 @@
-<div class="overlay" *ngIf="visible">
-  <div class="dialog">
+<div class="overlay" *ngIf="visible" (click)="onOverlayClick()">
+  <div class="dialog" (click)="$event.stopPropagation()">
     <div class="dialog-header">{{ header }}</div>
     <div class="dialog-body">{{ message }}</div>
     <div class="dialog-footer">
-      <button class="left-btn" (click)="onLeftClick()">{{ leftButtonText }}</button>
-      <button class="right-btn" (click)="onRightClick()">{{ rightButtonText }}</button>
+      <button *ngIf="leftButtonText" class="left-btn" (click)="onLeftClick()">
+        {{ leftButtonText }}
+      </button>
+      <button *ngIf="rightButtonText" class="right-btn" (click)="onRightClick()">
+        {{ rightButtonText }}
+      </button>
     </div>
   </div>
 </div>

@@ -3,7 +3,7 @@ import {CommonModule} from '@angular/common';
 import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {ActivatedRoute, Router, RouterModule} from '@angular/router';
 import {UiEventsService} from '../services/ui-events.service';
-import {Subscription} from 'rxjs';
+import {filter, Subscription, take} from 'rxjs';
 import {ApiService} from '../services/api.service';
 import {DateUtils} from '../services/date-utils';
 import { MESSAGES, UI_TEXT} from '../services/message-service';
@@ -142,7 +142,6 @@ export class DatasetForm implements OnInit, OnDestroy {
       return;
     }
 
-    // Ask for confirmation
     this.ui.showDialog({
       header: UI_TEXT.headers.confirmDelete,
       message: UI_TEXT.labels.confirmDeleteDataset,
@@ -150,8 +149,12 @@ export class DatasetForm implements OnInit, OnDestroy {
       rightButtonText: UI_TEXT.buttons.confirm,
     });
 
-    const sub = this.ui.dialogResult$.subscribe((result) => {
-      if (result === 'right') {
+    this.ui.dialogResult$
+      .pipe(
+        take(1),
+        filter(result => result === 'right')
+      )
+      .subscribe(() => {
         this.loading.set(true);
         this.api.delete(`/datasets/${this.datasetId}`).subscribe({
           next: () => {
@@ -165,9 +168,7 @@ export class DatasetForm implements OnInit, OnDestroy {
           },
           complete: () => this.loading.set(false),
         });
-      }
-      sub.unsubscribe();
-    });
+      });
   }
 
   private toDataset(): Dataset {

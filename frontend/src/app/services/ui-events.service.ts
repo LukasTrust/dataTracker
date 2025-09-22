@@ -45,4 +45,8 @@ export class UiEventsService {
   closeDialog(): void {
     this.dialogSubject.next(null);
   }
+
+  emitDialogResult(result: 'left' | 'right') {
+    this.dialogResultSubject.next(result);
+  }
 }

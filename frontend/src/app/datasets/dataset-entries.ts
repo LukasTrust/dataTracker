@@ -5,7 +5,7 @@ import {ActivatedRoute} from '@angular/router';
 import {UiEventsService} from '../services/ui-events.service';
 import {Entry} from '../models/entry-model';
 import {DatasetForm} from './dataset-form';
-import {Subscription} from 'rxjs';
+import {filter, Subscription, take} from 'rxjs';
 import {ApiService} from '../services/api.service';
 import {DateUtils} from '../services/date-utils';
 import {Color, LegendPosition, NgxChartsModule, ScaleType} from '@swimlane/ngx-charts';
@@ -155,11 +155,15 @@ export class DatasetEntries implements OnInit, OnDestroy {
       header: this.UI_TEXT.headers.confirmDelete,
       message: this.UI_TEXT.labels.confirmDeleteEntry,
       leftButtonText: this.UI_TEXT.buttons.cancel,
-      rightButtonText: this.UI_TEXT.buttons.confirm
+      rightButtonText: this.UI_TEXT.buttons.confirm,
     });
 
-    const sub = this.ui.dialogResult$.subscribe((result) => {
-      if (result === 'right') {
+    this.ui.dialogResult$
+      .pipe(
+        take(1),
+        filter(result => result === 'right')
+      )
+      .subscribe(() => {
         this.api.delete(`/entries/${entry.id}`).subscribe({
           next: () => {
             this.ui.showAlert('success', MESSAGES.entryDeleted);
@@ -170,11 +174,8 @@ export class DatasetEntries implements OnInit, OnDestroy {
             this.ui.showAlert('error', MESSAGES.entryDeleteError);
           },
         });
-      }
-      sub.unsubscribe(); // cleanup after one response
-    });
+      });
   }
-
 
   protected resetNewEntry(): void {
     this.newEntry = {value: null, label: '', date: ''};

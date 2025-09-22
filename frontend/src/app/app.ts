@@ -3,10 +3,11 @@ import {Sidebar} from './sidebar/sidebar';
 import {MainContent} from './main-content/main-content';
 import {Alert} from './alert/alert';
 import {AlertType, UiEventsService} from './services/ui-events.service';
+import {MessageDialog} from './message-dialog/message-dialog';
 
 @Component({
   selector: 'app-root',
-  imports: [Sidebar, MainContent, Alert],
+  imports: [Sidebar, MainContent, Alert, MessageDialog],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
