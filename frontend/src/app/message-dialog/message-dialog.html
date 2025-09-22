@@ -1,11 +1,7 @@
-<div class="overlay">
+<div class="overlay" *ngIf="visible">
   <div class="dialog">
-    <div class="dialog-header">
-      {{ header }}
-    </div>
-    <div class="dialog-body">
-      {{ message }}
-    </div>
+    <div class="dialog-header">{{ header }}</div>
+    <div class="dialog-body">{{ message }}</div>
     <div class="dialog-footer">
       <button class="left-btn" (click)="onLeftClick()">{{ leftButtonText }}</button>
       <button class="right-btn" (click)="onRightClick()">{{ rightButtonText }}</button>

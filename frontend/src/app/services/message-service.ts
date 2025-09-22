@@ -5,7 +5,7 @@ export const MESSAGES = {
   datasetCreated: 'Datensatz erstellt.',
   datasetCreateError: 'Datensatz konnte nicht erstellt werden.',
   datasetDeleted: 'Datensatz gelöscht.',
-  datasetDeletedError: 'Datensatz konnte nicht gelöscht werden.',
+  datasetDeleteError: 'Datensatz konnte nicht gelöscht werden.',
   loadEntriesError: 'Einträge konnten nicht geladen werden.',
   missingFields: 'Bitte geben Sie Wert, Bezeichnung und Datum ein.',
   entryCreated: 'Eintrag erstellt.',

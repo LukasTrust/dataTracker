@@ -1,24 +1,46 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, OnDestroy } from '@angular/core';
+import { Subscription } from 'rxjs';
+import { UiEventsService, DialogConfig } from '../services/ui-events.service';
 
 @Component({
   selector: 'app-message-dialog',
   templateUrl: './message-dialog.html',
   styleUrls: ['./message-dialog.css']
 })
-export class MessageDialog {
-  @Input() header: string = 'Message';
-  @Input() message: string = 'This is a dialog message.';
-  @Input() leftButtonText: string = 'Cancel';
-  @Input() rightButtonText: string = 'OK';
+export class MessageDialog implements OnDestroy {
+  header = '';
+  message = '';
+  leftButtonText = '';
+  rightButtonText = '';
+  visible = false;
 
-  @Output() leftButtonClick = new EventEmitter<void>();
-  @Output() rightButtonClick = new EventEmitter<void>();
+  private sub?: Subscription;
+
+  constructor(private readonly ui: UiEventsService) {
+    this.sub = this.ui.dialog$.subscribe((config: DialogConfig | null) => {
+      if (config) {
+        this.header = config.header;
+        this.message = config.message;
+        this.leftButtonText = config.leftButtonText ?? 'Cancel';
+        this.rightButtonText = config.rightButtonText ?? 'OK';
+        this.visible = true;
+      } else {
+        this.visible = false;
+      }
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.sub?.unsubscribe();
+  }
 
   onLeftClick() {
-    this.leftButtonClick.emit();
+    this.ui.closeDialog();
+    this.ui['dialogResultSubject'].next('left'); // emit back to service
   }
 
   onRightClick() {
-    this.rightButtonClick.emit();
+    this.ui.closeDialog();
+    this.ui['dialogResultSubject'].next('right');
   }
 }

@@ -142,12 +142,12 @@ export class DatasetForm implements OnInit, OnDestroy {
       return;
     }
 
-    // Show confirmation dialog
+    // Ask for confirmation
     this.ui.showDialog({
-      header: this.UI_TEXT.headers.confirmDelete,
-      message: this.UI_TEXT.labels.confirmDeleteDataset,
-      leftButtonText: this.UI_TEXT.buttons.cancel,
-      rightButtonText: this.UI_TEXT.buttons.confirm
+      header: UI_TEXT.headers.confirmDelete,
+      message: UI_TEXT.labels.confirmDeleteDataset,
+      leftButtonText: UI_TEXT.buttons.cancel,
+      rightButtonText: UI_TEXT.buttons.confirm,
     });
 
     const sub = this.ui.dialogResult$.subscribe((result) => {
@@ -157,16 +157,16 @@ export class DatasetForm implements OnInit, OnDestroy {
           next: () => {
             this.ui.showAlert('success', MESSAGES.datasetDeleted);
             this.ui.requestSidebarRefresh();
-            this.router.navigateByUrl(`/`).catch(() => this.router.navigateByUrl('/'));
+            this.router.navigateByUrl('/').catch(() => this.router.navigateByUrl('/'));
           },
           error: (err) => {
             console.error('Error deleting dataset:', err);
-            this.ui.showAlert('error', MESSAGES.datasetDeletedError);
+            this.ui.showAlert('error', MESSAGES.datasetDeleteError);
           },
           complete: () => this.loading.set(false),
         });
       }
-      sub.unsubscribe(); // clean up
+      sub.unsubscribe();
     });
   }
 
