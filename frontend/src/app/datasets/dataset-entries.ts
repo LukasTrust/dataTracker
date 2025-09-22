@@ -92,7 +92,7 @@ export class DatasetEntries implements OnInit, OnDestroy {
             ...r,
             date: r.date ? DateUtils.toDateInputValue(r.date as any) : ''
           }))
-          .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+          .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
       },
       error: (err) => {
         console.error('Error loading entries:', err);
@@ -119,7 +119,9 @@ export class DatasetEntries implements OnInit, OnDestroy {
         this.ui.showAlert('success', MESSAGES.entryCreated);
         if (res?.id) {
           res.date = res.date ? DateUtils.toDateInputValue(res.date as any) : '';
-          this.entries = [res, ...this.entries];
+          this.entries = [res, ...this.entries].sort(
+            (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+          );
         } else {
           this.loadEntries(this.datasetId!);
         }
