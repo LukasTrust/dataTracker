@@ -48,6 +48,11 @@
           <i class="fas" [ngClass]="isEditMode() ? 'fa-save' : 'fa-plus'" aria-hidden="true"></i>
           {{ isEditMode() ? UI_TEXT.buttons.update : UI_TEXT.buttons.create }}
         </button>
+        <button class="btn btn-lg btn-secondary width-btn"
+                [ngClass]="{'hidden': !isEditMode()}" type="button" (click)="createCopy()">
+          <i class="fas fa-copy" aria-hidden="true"></i>
+          {{ UI_TEXT.buttons.createCopy || 'Create Copy' }}
+        </button>
         <button style="margin-left: 0" class="btn btn-lg btn-danger width-btn"
           [ngClass]="{'hidden': !isEditMode()}" type="button" (click)="onDelete()">
           <i class="fas fa-trash" aria-hidden="true"></i>

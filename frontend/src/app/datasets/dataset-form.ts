@@ -171,6 +171,78 @@ export class DatasetForm implements OnInit, OnDestroy {
       });
   }
 
+  createCopy(): void {
+    if (!this.isEditMode() || this.datasetId === null) {
+      return;
+    }
+
+    const dto = this.toDataset();
+    dto.name = `${dto.name} - 2`; // Add " - 2" to the name
+
+    this.loading.set(true);
+
+    // Step 1: create a new dataset
+    this.api.post<{ id: number }>(`/datasets`, dto).subscribe({
+      next: (res) => {
+        const newId = res?.id ? Number(res.id) : null;
+        if (!newId) {
+          this.ui.showAlert('error', MESSAGES.datasetCreateError);
+          this.loading.set(false);
+          return;
+        }
+
+        // Step 2: fetch existing entries from old dataset
+        this.api.get<any[]>(`/datasets/${this.datasetId}/entries`).subscribe({
+          next: (entries) => {
+            if (entries && entries.length > 0) {
+              // Step 3: bulk copy entries
+              const copyCalls = entries.map((entry) => {
+                const payload = {
+                  value: entry.value,
+                  label: entry.label,
+                  date: entry.date ? DateUtils.toISOString(entry.date) : null,
+                };
+                return this.api.post(`/datasets/${newId}/entries`, payload);
+              });
+
+              // Execute entry copy calls
+              Promise.all(copyCalls.map(obs => obs.toPromise()))
+                .then(() => {
+                  this.ui.showAlert('success', MESSAGES.datasetCopied || 'Dataset copied successfully');
+                  this.ui.requestSidebarRefresh();
+                  this.router.navigateByUrl(`/datasets/${newId}`).catch(() => this.router.navigateByUrl('/'));
+                })
+                .catch((err) => {
+                  console.error('Error copying entries:', err);
+                  this.ui.showAlert('error', MESSAGES.entryCopyError || 'Error copying dataset entries');
+                  this.router.navigateByUrl(`/datasets/${newId}`).catch(() => this.router.navigateByUrl('/'));
+                })
+                .finally(() => this.loading.set(false));
+            } else {
+              // No entries to copy, just redirect
+              this.ui.showAlert('success', MESSAGES.datasetCopied || 'Dataset copied successfully');
+              this.ui.requestSidebarRefresh();
+              this.router.navigateByUrl(`/datasets/${newId}`).catch(() => this.router.navigateByUrl('/'));
+              this.loading.set(false);
+            }
+          },
+          error: (err) => {
+            console.error('Error fetching entries for copy:', err);
+            this.ui.showAlert('error', MESSAGES.entryCopyError || 'Error copying dataset entries');
+            this.router.navigateByUrl(`/datasets/${newId}`).catch(() => this.router.navigateByUrl('/'));
+            this.loading.set(false);
+          },
+        });
+      },
+      error: (err) => {
+        console.error('Error creating dataset copy:', err);
+        this.ui.showAlert('error', MESSAGES.datasetCreateError);
+        this.loading.set(false);
+      },
+    });
+  }
+
+
   private toDataset(): Dataset {
     const v = this.form.value as {
       name: string;

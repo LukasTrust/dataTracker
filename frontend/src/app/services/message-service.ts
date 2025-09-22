@@ -17,7 +17,9 @@ export const MESSAGES = {
   graphLoadError: 'Das Laden der Diagrammdaten ist fehlgeschlagen.',
   datasetMetaError: 'Die Datensatzdetails konnten nicht geladen werden.',
   actual: 'Reale Werte',
-  projected: 'Projektierte Werte'
+  projected: 'Projektierte Werte',
+  datasetCopied: 'Datensatz kopiert.',
+  entryCopyError: 'Eintrag konnte nicht kopiert werden.'
 };
 
 export const UI_TEXT = {
