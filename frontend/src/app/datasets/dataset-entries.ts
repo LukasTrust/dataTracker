@@ -217,13 +217,26 @@ export class DatasetEntries implements OnInit, OnDestroy {
   }
 
   private prepareChartData(): void {
+    // Normalize and validate data to avoid NaN in chart coordinates
+    const normalized = this.graphEntries
+      .map((e) => {
+        // Try to parse date robustly
+        const d = new Date((e as any).date);
+        const dateValid = !isNaN(d.getTime());
+        const v = Number(e.value);
+        const valueValid = Number.isFinite(v);
+        return {
+          projected: !!(e as any).projected,
+          date: dateValid ? d : null,
+          value: valueValid ? v : null,
+        };
+      })
+      .filter((x) => x.date !== null && x.value !== null);
+
     const series = (projected: boolean) =>
-      this.graphEntries
-        .filter((e) => e.projected === projected)
-        .map((e) => ({
-          name: new Date(e.date).toLocaleDateString(),
-          value: Number(e.value),
-        }));
+      normalized
+        .filter((x) => x.projected === projected)
+        .map((x) => ({ name: x.date as Date, value: x.value as number }));
 
     this.chartData = [
       { name: MESSAGES.actual, series: series(false) },
