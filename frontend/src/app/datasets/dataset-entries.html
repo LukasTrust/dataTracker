@@ -4,22 +4,22 @@
 
     <!-- Tabs -->
     <div class="tabs">
-      <button type="button" class="tab" [class.active]="activeTab() === 'data'" (click)="activeTab.set('data')">
+      <button type="button" class="tab" [class.active]="activeTab() === 'data'" (click)="activeTab.set('data')" [attr.title]="UI_TEXT.tooltips.tabs.dataTab">
         <i class="fas fa-table"></i> {{ UI_TEXT.tabs.data }}
       </button>
       <button type="button" class="tab" [class.active]="activeTab() === 'graph' && graphType() === 'actual'"
-              (click)="setGraphType('actual')">
+              (click)="setGraphType('actual')" [attr.title]="UI_TEXT.tooltips.tabs.graphActualTab">
         <i class="fas fa-chart-line"></i> {{ UI_TEXT.headers.graph.actual }}
       </button>
       <button type="button" class="tab" [class.active]="activeTab() === 'graph' && graphType() === 'target'"
-              (click)="setGraphType('target')">
+              (click)="setGraphType('target')" [attr.title]="UI_TEXT.tooltips.tabs.graphTargetTab">
         <i class="fas fa-bullseye"></i> {{ UI_TEXT.headers.graph.target }}
       </button>
       <button type="button" class="tab" [class.active]="activeTab() === 'graph' && graphType() === 'endDate'"
-              (click)="setGraphType('endDate')">
+              (click)="setGraphType('endDate')" [attr.title]="UI_TEXT.tooltips.tabs.graphEndDateTab">
         <i class="fas fa-calendar-alt"></i> {{ UI_TEXT.headers.graph.endDate }}
       </button>
-      <button type="button" class="tab" [class.active]="activeTab() === 'edit'" (click)="activeTab.set('edit')">
+      <button type="button" class="tab" [class.active]="activeTab() === 'edit'" (click)="activeTab.set('edit')" [attr.title]="UI_TEXT.tooltips.tabs.editTab">
         <i class="fas fa-pen"></i> {{ UI_TEXT.headers.edit }}
       </button>
     </div>
@@ -56,8 +56,8 @@
           </div>
         </div>
         <div style="margin-left:auto; display:flex; gap:8px;">
-          <button class="btn btn-secondary" type="button" (click)="filterQuery=''; filterFrom=''; filterTo=''">{{ UI_TEXT.buttons.clearFilters }}</button>
-          <button class="btn btn-secondary" type="button" (click)="exportFilteredCsv()"><i class="fas fa-file-csv"></i> {{ UI_TEXT.buttons.exportCsv }}</button>
+          <button class="btn btn-secondary" type="button" (click)="filterQuery=''; filterFrom=''; filterTo=''" [attr.title]="UI_TEXT.tooltips.actions.clearFilters">{{ UI_TEXT.buttons.clearFilters }}</button>
+          <button class="btn btn-secondary" type="button" (click)="exportFilteredCsv()" [attr.title]="UI_TEXT.tooltips.actions.exportCsv"><i class="fas fa-file-csv"></i> {{ UI_TEXT.buttons.exportCsv }}</button>
         </div>
       </div>
 
@@ -96,10 +96,10 @@
           <td><input type="number" [(ngModel)]="newEntry.value" [placeholder]="UI_TEXT.placeholders.value" (keyup.enter)="addEntry()"/></td>
           <td><input type="date" [(ngModel)]="newEntry.date" (click)="openPicker($event)" (keyup.enter)="addEntry()"/></td>
           <td>
-            <button class="btn btn-primary" type="button" (click)="addEntry()">
+            <button class="btn btn-primary" type="button" (click)="addEntry()" [attr.title]="UI_TEXT.tooltips.actions.addEntry">
               <i class="fas fa-plus"></i> {{ UI_TEXT.buttons.add }}
             </button>
-            <button class="btn btn-secondary" type="button" (click)="resetNewEntry()">
+            <button class="btn btn-secondary" type="button" (click)="resetNewEntry()" [attr.title]="UI_TEXT.tooltips.actions.clearNewEntry">
               <i class="fas fa-broom"></i> {{ UI_TEXT.buttons.clear }}
             </button>
           </td>
@@ -110,10 +110,10 @@
           <td><input type="number" [(ngModel)]="e.value"/></td>
           <td><input type="date" [(ngModel)]="e.date" (click)="openPicker($event)"/></td>
           <td>
-            <button class="btn btn-primary" type="button" (click)="saveEntry(e)">
+            <button class="btn btn-primary" type="button" (click)="saveEntry(e)" [attr.title]="UI_TEXT.tooltips.actions.saveEntry">
               <i class="fas fa-save"></i> {{ UI_TEXT.buttons.save }}
             </button>
-            <button class="btn btn-danger" type="button" (click)="deleteEntry(e)">
+            <button class="btn btn-danger" type="button" (click)="deleteEntry(e)" [attr.title]="UI_TEXT.tooltips.actions.deleteEntry">
               <i class="fas fa-trash-alt"></i> {{ UI_TEXT.buttons.delete }}
             </button>
           </td>
@@ -140,17 +140,17 @@
                 <div class="control-group" style="justify-content: space-between;">
                   <span class="group-label">{{ UI_TEXT.graph.range.label }}</span>
                   <div class="btn-group">
-                    <button type="button" class="btn btn-chip" [class.active]="rangePreset==='all'" (click)="setRange('all')">{{ UI_TEXT.graph.range.all }}</button>
-                    <button type="button" class="btn btn-chip" [class.active]="rangePreset==='30d'" (click)="setRange('30d')">{{ UI_TEXT.graph.range.d30 }}</button>
-                    <button type="button" class="btn btn-chip" [class.active]="rangePreset==='7d'" (click)="setRange('7d')">{{ UI_TEXT.graph.range.d7 }}</button>
+                    <button type="button" class="btn btn-chip" [class.active]="rangePreset==='all'" (click)="setRange('all')" [attr.title]="UI_TEXT.tooltips.graph.rangeAll">{{ UI_TEXT.graph.range.all }}</button>
+                    <button type="button" class="btn btn-chip" [class.active]="rangePreset==='30d'" (click)="setRange('30d')" [attr.title]="UI_TEXT.tooltips.graph.range30d">{{ UI_TEXT.graph.range.d30 }}</button>
+                    <button type="button" class="btn btn-chip" [class.active]="rangePreset==='7d'" (click)="setRange('7d')" [attr.title]="UI_TEXT.tooltips.graph.range7d">{{ UI_TEXT.graph.range.d7 }}</button>
                   </div>
                 </div>
                 <div class="control-group" style="align-items: center; gap: 12px;">
                   <span class="group-label">{{ UI_TEXT.graph.optionsLabel }}</span>
-                  <label class="switch"><input type="checkbox" [checked]="robustScale()" (change)="robustScale.set($any($event.target).checked)"/><span> {{ UI_TEXT.graph.controls.robustScale }}</span></label>
-                  <label class="switch"><input type="checkbox" [checked]="smoothLine()" (change)="smoothLine.set($any($event.target).checked)"/><span> {{ UI_TEXT.graph.controls.smoothLine }}</span></label>
-                  <label class="switch"><input type="checkbox" [checked]="roundDomains()" (change)="roundDomains.set($any($event.target).checked)"/><span> {{ UI_TEXT.graph.controls.roundDomains }}</span></label>
-                  <label class="switch"><input type="checkbox" [checked]="showTimeline()" (change)="showTimeline.set($any($event.target).checked)"/><span> {{ UI_TEXT.graph.controls.timeline }}</span></label>
+                  <label class="switch" [attr.title]="UI_TEXT.tooltips.graph.robustScale"><input type="checkbox" [checked]="robustScale()" (change)="robustScale.set($any($event.target).checked)"/><span> {{ UI_TEXT.graph.controls.robustScale }}</span></label>
+                  <label class="switch" [attr.title]="UI_TEXT.tooltips.graph.smoothLine"><input type="checkbox" [checked]="smoothLine()" (change)="smoothLine.set($any($event.target).checked)"/><span> {{ UI_TEXT.graph.controls.smoothLine }}</span></label>
+                  <label class="switch" [attr.title]="UI_TEXT.tooltips.graph.roundDomains"><input type="checkbox" [checked]="roundDomains()" (change)="roundDomains.set($any($event.target).checked)"/><span> {{ UI_TEXT.graph.controls.roundDomains }}</span></label>
+                  <label class="switch" [attr.title]="UI_TEXT.tooltips.graph.timeline"><input type="checkbox" [checked]="showTimeline()" (change)="showTimeline.set($any($event.target).checked)"/><span> {{ UI_TEXT.graph.controls.timeline }}</span></label>
                 </div>
               </div>
               <div class="chart-wrapper">

@@ -115,4 +115,36 @@ export const UI_TEXT = {
       timeline: 'Zeitachse',
     },
   },
+  tooltips: {
+    tabs: {
+      dataTab: 'Zur Datenansicht wechseln',
+      graphActualTab: 'Diagramm mit aktuellen Werten anzeigen',
+      graphTargetTab: 'Diagramm mit Zielwerten anzeigen',
+      graphEndDateTab: 'Diagramm mit Enddatum anzeigen',
+      editTab: 'Datensatz bearbeiten',
+    },
+    actions: {
+      addEntry: 'Neuen Eintrag hinzufügen',
+      clearNewEntry: 'Eingabefelder leeren',
+      saveEntry: 'Eintrag speichern',
+      deleteEntry: 'Eintrag löschen',
+      clearFilters: 'Alle Filter zurücksetzen',
+      exportCsv: 'Gefilterte Einträge als CSV exportieren',
+    },
+    graph: {
+      rangeAll: 'Gesamten Zeitraum anzeigen',
+      range30d: 'Letzte 30 Tage anzeigen',
+      range7d: 'Letzte 7 Tage anzeigen',
+      robustScale: 'Ausreißer abschwächen (robuste Skalierung)',
+      smoothLine: 'Linie glätten',
+      roundDomains: 'Achsenbereiche runden',
+      timeline: 'Zeitachse unter dem Diagramm anzeigen',
+    },
+    form: {
+      createDataset: 'Neuen Datensatz erstellen',
+      updateDataset: 'Änderungen am Datensatz speichern',
+      createCopy: 'Eine Kopie dieses Datensatzes erstellen',
+      deleteDataset: 'Diesen Datensatz löschen',
+    },
+  },
 };
