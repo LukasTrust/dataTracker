@@ -1,64 +1,63 @@
 <div class="container">
-  <div>
-    <h2>{{ isEditMode() ? '' : UI_TEXT.headers.createDataset }}</h2>
+  <div class="form-card">
+    <div class="form-header">
+      <h2 class="title">{{ isEditMode() ? UI_TEXT.headers.edit : UI_TEXT.headers.createDataset }}</h2>
+    </div>
 
     <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
-      <div class="form-row">
-        <label for="name">{{ UI_TEXT.labels.name }}</label>
-        <input id="name" type="text" formControlName="name" required/>
-        <div class="error" [class.visible]="form.get('name')?.touched && form.get('name')?.invalid">
-          {{ UI_TEXT.errors.nameRequired }}
+      <div class="grid">
+        <div class="form-row">
+          <label for="name">{{ UI_TEXT.labels.name }}</label>
+          <input id="name" type="text" formControlName="name" required/>
+          <div class="error" [class.visible]="form.get('name')?.touched && form.get('name')?.invalid">
+            {{ UI_TEXT.errors.nameRequired }}
+          </div>
         </div>
-      </div>
 
-      <div class="form-row">
-        <label for="description">{{ UI_TEXT.labels.description }}</label>
-        <textarea id="description" rows="3" formControlName="description"></textarea>
-      </div>
-
-      <div class="form-row">
-        <label for="symbol">{{ UI_TEXT.labels.symbol }}</label>
-        <input id="symbol" type="text" formControlName="symbol" required/>
-        <div class="error" [class.visible]="form.get('symbol')?.touched && form.get('symbol')?.invalid">
-          {{ UI_TEXT.errors.symbolRequired }}
+        <div class="form-row">
+          <label for="symbol">{{ UI_TEXT.labels.symbol }}</label>
+          <input id="symbol" type="text" formControlName="symbol" required/>
+          <div class="error" [class.visible]="form.get('symbol')?.touched && form.get('symbol')?.invalid">
+            {{ UI_TEXT.errors.symbolRequired }}
+          </div>
         </div>
-      </div>
 
-      <div class="form-row">
-        <label for="targetValue">{{ UI_TEXT.labels.targetValue }}</label>
-        <input id="targetValue" type="number" formControlName="targetValue"/>
-      </div>
+        <div class="form-row span-2">
+          <label for="description">{{ UI_TEXT.labels.description }}</label>
+          <textarea id="description" rows="3" formControlName="description"></textarea>
+        </div>
 
-      <div class="form-row">
-        <div>
+        <div class="form-row">
+          <label for="targetValue">{{ UI_TEXT.labels.targetValue }}</label>
+          <input id="targetValue" type="number" formControlName="targetValue"/>
+        </div>
+
+        <div class="form-row date-row">
           <label for="startDate">{{ UI_TEXT.labels.startDate }}</label>
           <input id="startDate" type="date" formControlName="startDate" (click)="openPicker($event)"/>
         </div>
-      </div>
 
-      <div class="form-row">
-        <div>
+        <div class="form-row date-row">
           <label for="endDate">{{ UI_TEXT.labels.endDate }}</label>
           <input id="endDate" type="date" formControlName="endDate" (click)="openPicker($event)"/>
         </div>
       </div>
 
       <div class="actions">
-        <button class="btn btn-lg width-btn btn-primary" type="submit" [disabled]="loading()">
+        <button class="btn btn-primary btn-lg" type="submit" [disabled]="loading()">
           <i class="fas" [ngClass]="isEditMode() ? 'fa-save' : 'fa-plus'" aria-hidden="true"></i>
           {{ isEditMode() ? UI_TEXT.buttons.update : UI_TEXT.buttons.create }}
         </button>
-        <button style="margin-left: 0" class="btn btn-lg btn-secondary width-btn"
-                [ngClass]="{'hidden': !isEditMode()}" type="button" (click)="createCopy()">
-          <i class="fas fa-copy" aria-hidden="true"></i>
-          {{ UI_TEXT.buttons.createCopy }}
-        </button>
-        <button style="margin-left: 0" class="btn btn-lg btn-danger width-btn"
-          [ngClass]="{'hidden': !isEditMode()}" type="button" (click)="onDelete()">
-          <i class="fas fa-trash" aria-hidden="true"></i>
-          {{ UI_TEXT.buttons.delete }}
-        </button>
-
+        <div class="actions-right" *ngIf="isEditMode()">
+          <button class="btn btn-secondary btn-lg" type="button" (click)="createCopy()">
+            <i class="fas fa-copy" aria-hidden="true"></i>
+            {{ UI_TEXT.buttons.createCopy }}
+          </button>
+          <button class="btn btn-danger btn-lg" type="button" (click)="onDelete()">
+            <i class="fas fa-trash" aria-hidden="true"></i>
+            {{ UI_TEXT.buttons.delete }}
+          </button>
+        </div>
       </div>
     </form>
   </div>

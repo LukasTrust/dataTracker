@@ -1,4 +1,4 @@
-import {Component, OnDestroy, OnInit, signal} from '@angular/core';
+import {Component, OnDestroy, OnInit, signal, ChangeDetectionStrategy} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {ActivatedRoute} from '@angular/router';
@@ -29,6 +29,7 @@ interface NewEntry {
   imports: [CommonModule, FormsModule, ReactiveFormsModule, DatasetForm, NgxChartsModule],
   templateUrl: './dataset-entries.html',
   styleUrls: ['./dataset-entries.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DatasetEntries implements OnInit, OnDestroy {
   datasetId: number | null = null;
@@ -53,20 +54,25 @@ export class DatasetEntries implements OnInit, OnDestroy {
 
   // Interactive chart options
   robustScale = signal<boolean>(true);
-  smoothLine = signal<boolean>(true);
-  showTimeline = signal<boolean>(true);
+  smoothLine = signal<boolean>(false);
+  showTimeline = signal<boolean>(false);
   roundDomains = signal<boolean>(true);
+
+  // Range presets for graph
+  rangePreset: 'all' | '30d' | '7d' = 'all';
 
   // Computed y-axis bounds (robust to outliers)
   yScaleMin?: number;
   yScaleMax?: number;
+  xScaleMin?: Date;
+  xScaleMax?: Date;
 
   // Chart config
   colorScheme: Color = {
     name: 'datasetScheme',
     selectable: true,
     group: 'ordinal' as ScaleType,
-    domain: ['#1976d2', '#9c27b0'],
+    domain: ['#1976d2', '#ff9800'],
   };
 
   // D3 curve reference for template
@@ -193,6 +199,12 @@ export class DatasetEntries implements OnInit, OnDestroy {
     this.loadGraph(type);
   }
 
+  setRange(preset: 'all' | '30d' | '7d'): void {
+    this.rangePreset = preset;
+    // Recompute chart data from already loaded entries
+    this.prepareChartData();
+  }
+
   loadGraph(type: GraphType = this.graphType()): void {
     if (!this.datasetId) return;
 
@@ -218,7 +230,7 @@ export class DatasetEntries implements OnInit, OnDestroy {
 
   private prepareChartData(): void {
     // Normalize and validate data to avoid NaN in chart coordinates
-    const normalized = this.graphEntries
+    let normalized = this.graphEntries
       .map((e) => {
         // Try to parse date robustly
         const d = new Date((e as any).date);
@@ -229,19 +241,40 @@ export class DatasetEntries implements OnInit, OnDestroy {
           projected: !!(e as any).projected,
           date: dateValid ? d : null,
           value: valueValid ? v : null,
-        };
+        } as { projected: boolean; date: Date | null; value: number | null };
       })
-      .filter((x) => x.date !== null && x.value !== null);
+      .filter((x) => x.date !== null && x.value !== null) as { projected: boolean; date: Date; value: number }[];
 
-    const series = (projected: boolean) =>
-      normalized
-        .filter((x) => x.projected === projected)
-        .map((x) => ({ name: x.date as Date, value: x.value as number }));
+    // Apply range preset filter
+    if (this.rangePreset !== 'all') {
+      const now = new Date();
+      const days = this.rangePreset === '30d' ? 30 : 7;
+      const from = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      from.setDate(from.getDate() - days);
+      normalized = normalized.filter(x => x.date >= from);
+    }
+
+    const actual = normalized.filter(x => !x.projected);
+    const projected = normalized.filter(x => x.projected);
+
+    const toSeries = (arr: {date: Date; value: number}[]) => arr.map(x => ({ name: x.date, value: x.value }));
 
     this.chartData = [
-      { name: MESSAGES.actual, series: series(false) },
-      { name: MESSAGES.projected, series: series(true) },
+      { name: MESSAGES.actual, series: toSeries(actual) },
+      { name: MESSAGES.projected, series: toSeries(projected) },
     ];
+
+    // Compute x-axis bounds based on filtered data
+    const allDates = normalized.map(n => n.date.getTime());
+    if (allDates.length) {
+      const minT = Math.min(...allDates);
+      const maxT = Math.max(...allDates);
+      this.xScaleMin = new Date(minT);
+      this.xScaleMax = new Date(maxT);
+    } else {
+      this.xScaleMin = undefined;
+      this.xScaleMax = undefined;
+    }
 
     this.computeYBounds();
   }
@@ -284,6 +317,35 @@ export class DatasetEntries implements OnInit, OnDestroy {
         return arr[base];
       }
     }
+  }
+
+  // Axis tick formatting
+  formatDateTick = (val: Date | string): string => {
+    const d = new Date(val as any);
+    if (isNaN(d.getTime())) return String(val);
+    return d.toLocaleDateString(undefined, { month: 'short', day: '2-digit' });
+  };
+
+  formatValueTick = (val: number): string => {
+    const v = Number(val);
+    if (!isFinite(v)) return '';
+    const s = this.datasetSymbol ? ` ${this.datasetSymbol}` : '';
+    // Compact formatting for large numbers
+    const abs = Math.abs(v);
+    let out: string;
+    if (abs >= 1_000_000) out = (v / 1_000_000).toFixed(1) + 'M';
+    else if (abs >= 1_000) out = (v / 1_000).toFixed(1) + 'k';
+    else out = v.toString();
+    return out + s;
+  };
+
+  // Reference line for average of actual series
+  get referenceLines(): { name?: string; value: number }[] {
+    const actualSeries = this.chartData.find(s => s.name === MESSAGES.actual)?.series || [];
+    const vals = actualSeries.map(p => Number(p.value)).filter(v => isFinite(v));
+    if (!vals.length) return [];
+    const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
+    return [{ name: 'Avg', value: avg }];
   }
 
   // ===== Dataset meta =====
@@ -396,9 +458,9 @@ export class DatasetEntries implements OnInit, OnDestroy {
         const maxT = Math.max(...times);
         const dayMs = 24 * 60 * 60 * 1000;
         const days = Math.max(0, Math.round((maxT - minT) / dayMs));
-        const fromStr = DateUtils.toDateInputValue(new Date(minT).toISOString());
-        const toStr = DateUtils.toDateInputValue(new Date(maxT).toISOString());
-        timeSpan = `${fromStr} → ${toStr} (${days} day${days === 1 ? '' : 's'})`;
+        const fromStr = DateUtils.formatDE(new Date(minT));
+        const toStr = DateUtils.formatDE(new Date(maxT));
+        timeSpan = `${fromStr} → ${toStr} (${days} ${days === 1 ? 'Tag' : 'Tage'})`;
       }
     }
 

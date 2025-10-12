@@ -39,11 +39,11 @@ export const UI_TEXT = {
   },
   labels: {
     name: 'Name',
-    description: 'Beschreibung',
+    description: 'Beschreibung (Optional)',
     symbol: 'Symbol',
-    targetValue: 'Zielwert',
-    startDate: 'Startdatum',
-    endDate: 'Enddatum',
+    targetValue: 'Zielwert (Optional)',
+    startDate: 'Startdatum (Optional)',
+    endDate: 'Enddatum (Optional)',
     confirmDeleteDataset: 'Bestätigen Sie das Löschen des Datensatzes.',
     confirmDeleteEntry: 'Bestätigen Sie das Löschen des Eintrags.',
     search: 'Suche',
@@ -93,12 +93,21 @@ export const UI_TEXT = {
   stats: {
     count: 'Anzahl',
     avg: 'Durchschnitt',
+    sum: 'Summe',
+    timeSpan: 'Zeitraum',
     latest: 'Neuester',
   },
   graph: {
     loading: 'Graph wird geladen...',
     xAxis: 'Datum',
     yAxis: 'Wert',
+    range: {
+      label: 'Bereich',
+      all: 'Alle',
+      d30: '30T',
+      d7: '7T',
+    },
+    optionsLabel: 'Optionen',
     controls: {
       robustScale: 'Robuste Skalierung',
       smoothLine: 'Geglättete Linie',

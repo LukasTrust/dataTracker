@@ -1,8 +1,8 @@
 .chart-container {
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  height: 75vh;
+  gap: 8px;
+  height: 88vh;
   background: linear-gradient(180deg, #ffffff 0%, #f9f5ff 100%);
   border: 1px solid #e5d9ff;
   border-radius: var(--radius-md);
@@ -10,13 +10,84 @@
   padding: var(--space-3);
 }
 
+.chart-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 16px;
+}
+
+.control-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #ffffff;
+  padding: 8px 10px;
+  border: 1px solid #ece7ff;
+  border-radius: 8px;
+}
+
+.group-label {
+  font-size: 12px;
+  color: #5b6b7a;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.btn-group {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.btn.btn-chip {
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: #334155;
+  padding: 4px 10px;
+  border-radius: 6px;
+  line-height: 1.2;
+}
+
+.btn.btn-chip.active {
+  background: #1976d2;
+  border-color: #1976d2;
+  color: #fff;
+}
+
+.switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.chart-content {
+  display: flex;
+  gap: 12px;
+  flex: 1;
+  min-height: 0;
+}
+
+.chart-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.chart-aside {
+  width: 260px;
+  min-width: 220px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
 .chart-wrapper {
   flex: 1;
+  min-height: 0; /* allow flex child to shrink */
 }
 
 .chart-header {
   text-align: center;
-  margin-bottom: 1rem;
+  margin-bottom: 4px;
   font-weight: 600;
 }
 
