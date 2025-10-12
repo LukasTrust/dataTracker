@@ -46,7 +46,7 @@ export class UiEventsService {
     this.dialogSubject.next(null);
   }
 
-  emitDialogResult(result: 'left' | 'right') {
+  emitDialogResult(result: 'left' | 'right'): void {
     this.dialogResultSubject.next(result);
   }
 }

@@ -1,28 +1,34 @@
-import { Component, OnDestroy, OnInit, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
-import { Subscription, filter, take } from 'rxjs';
+import {Component, OnDestroy, OnInit, signal} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {FormsModule, ReactiveFormsModule} from '@angular/forms';
+import {ActivatedRoute} from '@angular/router';
+import {filter, Subscription, take} from 'rxjs';
 
-import { NgxChartsModule, Color, LegendPosition, ScaleType } from '@swimlane/ngx-charts';
-import { curveLinear, curveMonotoneX } from 'd3-shape';
+import {Color, LegendPosition, NgxChartsModule, ScaleType} from '@swimlane/ngx-charts';
+import {curveLinear, curveMonotoneX} from 'd3-shape';
 
-import { UiEventsService } from '../services/ui-events.service';
-import { ApiService } from '../services/api.service';
-import { DateUtils } from '../services/date-utils';
-import { MESSAGES, UI_TEXT } from '../services/message-service';
+import {UiEventsService} from '../services/ui-events.service';
+import {ApiService} from '../services/api.service';
+import {DateUtils} from '../services/date-utils';
+import {MESSAGES, UI_TEXT} from '../services/message-service';
 
-import { Entry } from '../models/entry-model';
-import { DatasetForm } from './dataset-form';
+import {Entry} from '../models/entry-model';
+import {DatasetForm} from './dataset-form';
 
 type GraphType = 'actual' | 'target' | 'endDate';
+
+interface NewEntry {
+  value: number | null;
+  label: string;
+  date: string;
+}
 
 @Component({
   selector: 'app-dataset-entries',
   standalone: true,
   imports: [CommonModule, FormsModule, ReactiveFormsModule, DatasetForm, NgxChartsModule],
   templateUrl: './dataset-entries.html',
-  styleUrl: './dataset-entries.css',
+  styleUrls: ['./dataset-entries.css'],
 })
 export class DatasetEntries implements OnInit, OnDestroy {
   datasetId: number | null = null;
@@ -34,7 +40,7 @@ export class DatasetEntries implements OnInit, OnDestroy {
 
   // Entry state
   entries: Entry[] = [];
-  newEntry = this.createEmptyEntry();
+  newEntry: NewEntry = this.createEmptyEntry();
 
   // Dataset meta
   datasetSymbol = '';
@@ -284,7 +290,7 @@ export class DatasetEntries implements OnInit, OnDestroy {
     this.ui.showAlert('error', message);
   }
 
-  private createEmptyEntry() {
+  private createEmptyEntry(): NewEntry {
     return { value: null, label: '', date: '' };
   }
 
@@ -346,7 +352,7 @@ export class DatasetEntries implements OnInit, OnDestroy {
       return inText && inDate;
     });
 
-    const sorted = [...filtered].sort((a, b) => {
+    return [...filtered].sort((a, b) => {
       if (this.sortBy === 'date') {
         const da = new Date(a.date as any).getTime();
         const db = new Date(b.date as any).getTime();
@@ -357,8 +363,6 @@ export class DatasetEntries implements OnInit, OnDestroy {
         return this.sortDir === 'desc' ? vb - va : va - vb;
       }
     });
-
-    return sorted;
   }
 
   get stats() {

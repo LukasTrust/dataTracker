@@ -142,8 +142,8 @@
               [yAxisLabel]="UI_TEXT.graph.yAxis + (datasetSymbol ? ' (' + datasetSymbol + ')' : '')"
               [autoScale]="!robustScale()"
               [roundDomains]="roundDomains()"
-              [yScaleMin]="robustScale() ? yScaleMin : undefined"
-              [yScaleMax]="robustScale() ? yScaleMax : undefined"
+              [yScaleMin]="$any(robustScale() ? yScaleMin : undefined)"
+              [yScaleMax]="$any(robustScale() ? yScaleMax : undefined)"
               [curve]="curve"
               [timeline]="showTimeline()">
             </ngx-charts-line-chart>

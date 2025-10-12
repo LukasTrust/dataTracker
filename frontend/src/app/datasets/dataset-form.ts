@@ -16,7 +16,7 @@ import { Dataset } from '../models/dataset-model';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, RouterModule],
   templateUrl: './dataset-form.html',
-  styleUrl: './dataset-form.css',
+  styleUrls: ['./dataset-form.css'],
 })
 export class DatasetForm implements OnInit, OnDestroy {
   form!: FormGroup;

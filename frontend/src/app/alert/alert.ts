@@ -7,7 +7,7 @@ import {AlertType} from '../services/ui-events.service';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './alert.html',
-  styleUrl: './alert.css'
+  styleUrls: ['./alert.css']
 })
 export class Alert implements OnChanges {
   @Input() show: boolean = false;

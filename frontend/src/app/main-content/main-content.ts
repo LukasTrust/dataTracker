@@ -9,7 +9,7 @@ import {NgClass} from '@angular/common';
     NgClass
   ],
   templateUrl: './main-content.html',
-  styleUrl: './main-content.css'
+  styleUrls: ['./main-content.css']
 })
 export class MainContent {
   isSidebarCollapsed = input.required<boolean>();

@@ -11,7 +11,7 @@ import {ApiService} from '../services/api.service';
   standalone: true,
   imports: [RouterModule, CommonModule],
   templateUrl: './sidebar.html',
-  styleUrl: './sidebar.css',
+  styleUrls: ['./sidebar.css'],
 })
 export class Sidebar implements OnInit {
   isSidebarCollapsed = input.required<boolean>();
@@ -54,7 +54,7 @@ export class Sidebar implements OnInit {
   }
 
   toggleCollapse(): void {
-    this.changeIsSidebarCollapsed.emit(!this.isSidebarCollapsed);
+    this.changeIsSidebarCollapsed.emit(!this.isSidebarCollapsed());
   }
 
   closeSidenav(): void {

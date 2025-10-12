@@ -9,7 +9,7 @@ import {MessageDialog} from './message-dialog/message-dialog';
   selector: 'app-root',
   imports: [Sidebar, MainContent, Alert, MessageDialog],
   templateUrl: './app.html',
-  styleUrl: './app.css'
+  styleUrls: ['./app.css']
 })
 export class App implements OnInit  {
   isSidebarCollapsed = signal<boolean>(false);
