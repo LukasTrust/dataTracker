@@ -51,7 +51,7 @@
         <button style="margin-left: 0" class="btn btn-lg btn-secondary width-btn"
                 [ngClass]="{'hidden': !isEditMode()}" type="button" (click)="createCopy()">
           <i class="fas fa-copy" aria-hidden="true"></i>
-          {{ UI_TEXT.buttons.createCopy || 'Create Copy' }}
+          {{ UI_TEXT.buttons.createCopy }}
         </button>
         <button style="margin-left: 0" class="btn btn-lg btn-danger width-btn"
           [ngClass]="{'hidden': !isEditMode()}" type="button" (click)="onDelete()">

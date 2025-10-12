@@ -27,6 +27,47 @@
     <!-- Data tab -->
     <div *ngIf="activeTab() === 'data'">
       <h3>{{ UI_TEXT.headers.entries }}</h3>
+
+      <!-- Filters & actions -->
+      <div class="toolbar" style="display:flex; gap:12px; align-items:end; flex-wrap:wrap; margin: 8px 0 12px 0;">
+        <div style="display:flex; flex-direction:column;">
+          <label>{{ UI_TEXT.labels.search }}</label>
+          <input type="text" [(ngModel)]="filterQuery" [placeholder]="UI_TEXT.placeholders.searchLabel"/>
+        </div>
+        <div style="display:flex; flex-direction:column;">
+          <label>{{ UI_TEXT.labels.from }}</label>
+          <input type="date" [(ngModel)]="filterFrom" (click)="openPicker($event)"/>
+        </div>
+        <div style="display:flex; flex-direction:column;">
+          <label>{{ UI_TEXT.labels.to }}</label>
+          <input type="date" [(ngModel)]="filterTo" (click)="openPicker($event)"/>
+        </div>
+        <div style="display:flex; flex-direction:column;">
+          <label>{{ UI_TEXT.labels.sortBy }}</label>
+          <div style="display:flex; gap:6px;">
+            <select [(ngModel)]="sortBy">
+              <option value="date">{{ UI_TEXT.sorting.date }}</option>
+              <option value="value">{{ UI_TEXT.sorting.value }}</option>
+            </select>
+            <select [(ngModel)]="sortDir">
+              <option value="desc">{{ UI_TEXT.sorting.desc }}</option>
+              <option value="asc">{{ UI_TEXT.sorting.asc }}</option>
+            </select>
+          </div>
+        </div>
+        <div style="margin-left:auto; display:flex; gap:8px;">
+          <button class="btn btn-secondary" type="button" (click)="filterQuery=''; filterFrom=''; filterTo=''">{{ UI_TEXT.buttons.clearFilters }}</button>
+          <button class="btn btn-secondary" type="button" (click)="exportFilteredCsv()"><i class="fas fa-file-csv"></i> {{ UI_TEXT.buttons.exportCsv }}</button>
+        </div>
+      </div>
+
+      <!-- Quick stats -->
+      <div class="stats" style="display:flex; gap:16px; flex-wrap:wrap; margin-bottom:8px;">
+        <div class="stat-card">{{ UI_TEXT.stats.count }}: {{stats.count}}</div>
+        <div class="stat-card">{{ UI_TEXT.stats.avg }}: {{stats.avg | number:'1.0-2'}}</div>
+        <div class="stat-card">{{ UI_TEXT.stats.latest }}: {{stats.latest}}</div>
+      </div>
+
       <table class="table">
         <thead>
         <tr>
@@ -38,9 +79,9 @@
         </thead>
         <tbody>
         <tr>
-          <td><input type="text" [(ngModel)]="newEntry.label" [placeholder]="UI_TEXT.placeholders.label"/></td>
-          <td><input type="number" [(ngModel)]="newEntry.value" [placeholder]="UI_TEXT.placeholders.value"/></td>
-          <td><input type="date" [(ngModel)]="newEntry.date" (click)="openPicker($event)"/></td>
+          <td><input type="text" [(ngModel)]="newEntry.label" [placeholder]="UI_TEXT.placeholders.label" (keyup.enter)="addEntry()"/></td>
+          <td><input type="number" [(ngModel)]="newEntry.value" [placeholder]="UI_TEXT.placeholders.value" (keyup.enter)="addEntry()"/></td>
+          <td><input type="date" [(ngModel)]="newEntry.date" (click)="openPicker($event)" (keyup.enter)="addEntry()"/></td>
           <td>
             <button class="btn btn-primary" type="button" (click)="addEntry()">
               <i class="fas fa-plus"></i> {{ UI_TEXT.buttons.add }}
@@ -51,7 +92,7 @@
           </td>
         </tr>
 
-        <tr *ngFor="let e of entries">
+        <tr *ngFor="let e of viewEntries()">
           <td><input type="text" [(ngModel)]="e.label"/></td>
           <td><input type="number" [(ngModel)]="e.value"/></td>
           <td><input type="date" [(ngModel)]="e.date" (click)="openPicker($event)"/></td>
@@ -81,6 +122,12 @@
       <ng-template #graphContent>
         <div *ngIf="chartData.length; else noData">
           <h3 class="chart-header">{{datasetName}}</h3>
+          <div class="chart-controls" style="margin-bottom: 8px; display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
+            <label><input type="checkbox" [checked]="robustScale()" (change)="robustScale.set($any($event.target).checked)"/> {{ UI_TEXT.graph.controls.robustScale }}</label>
+            <label><input type="checkbox" [checked]="smoothLine()" (change)="smoothLine.set($any($event.target).checked)"/> {{ UI_TEXT.graph.controls.smoothLine }}</label>
+            <label><input type="checkbox" [checked]="roundDomains()" (change)="roundDomains.set($any($event.target).checked)"/> {{ UI_TEXT.graph.controls.roundDomains }}</label>
+            <label><input type="checkbox" [checked]="showTimeline()" (change)="showTimeline.set($any($event.target).checked)"/> {{ UI_TEXT.graph.controls.timeline }}</label>
+          </div>
           <div class="chart-wrapper">
             <ngx-charts-line-chart
               [scheme]="colorScheme"
@@ -93,8 +140,12 @@
               [showYAxisLabel]="true"
               [xAxisLabel]="UI_TEXT.graph.xAxis"
               [yAxisLabel]="UI_TEXT.graph.yAxis + (datasetSymbol ? ' (' + datasetSymbol + ')' : '')"
-              [autoScale]="true"
-              [timeline]="true">
+              [autoScale]="!robustScale()"
+              [roundDomains]="roundDomains()"
+              [yScaleMin]="robustScale() ? yScaleMin : undefined"
+              [yScaleMax]="robustScale() ? yScaleMax : undefined"
+              [curve]="curve"
+              [timeline]="showTimeline()">
             </ngx-charts-line-chart>
           </div>
         </div>

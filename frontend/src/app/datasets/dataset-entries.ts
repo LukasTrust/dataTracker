@@ -5,6 +5,7 @@ import { ActivatedRoute } from '@angular/router';
 import { Subscription, filter, take } from 'rxjs';
 
 import { NgxChartsModule, Color, LegendPosition, ScaleType } from '@swimlane/ngx-charts';
+import { curveLinear, curveMonotoneX } from 'd3-shape';
 
 import { UiEventsService } from '../services/ui-events.service';
 import { ApiService } from '../services/api.service';
@@ -44,6 +45,16 @@ export class DatasetEntries implements OnInit, OnDestroy {
   graphEntries: Entry[] = [];
   chartData: { name: string; series: { name: string; value: number }[] }[] = [];
 
+  // Interactive chart options
+  robustScale = signal<boolean>(true);
+  smoothLine = signal<boolean>(true);
+  showTimeline = signal<boolean>(true);
+  roundDomains = signal<boolean>(true);
+
+  // Computed y-axis bounds (robust to outliers)
+  yScaleMin?: number;
+  yScaleMax?: number;
+
   // Chart config
   colorScheme: Color = {
     name: 'datasetScheme',
@@ -51,6 +62,9 @@ export class DatasetEntries implements OnInit, OnDestroy {
     group: 'ordinal' as ScaleType,
     domain: ['#1976d2', '#9c27b0'],
   };
+
+  // D3 curve reference for template
+  get curve() { return this.smoothLine() ? curveMonotoneX : curveLinear; }
 
   private sub?: Subscription;
 
@@ -209,6 +223,48 @@ export class DatasetEntries implements OnInit, OnDestroy {
       { name: MESSAGES.actual, series: series(false) },
       { name: MESSAGES.projected, series: series(true) },
     ];
+
+    this.computeYBounds();
+  }
+
+  private computeYBounds(): void {
+    const values = this.graphEntries.map((e) => Number(e.value)).filter((v) => !isNaN(v));
+    if (!values.length) {
+      this.yScaleMin = undefined;
+      this.yScaleMax = undefined;
+      return;
+    }
+
+    // Robust stats using IQR to mitigate outliers
+    const sorted = [...values].sort((a, b) => a - b);
+    const q1 = quantile(sorted, 0.25);
+    const q3 = quantile(sorted, 0.75);
+    const iqr = q3 - q1;
+    const lowerFence = q1 - 1.5 * iqr;
+    const upperFence = q3 + 1.5 * iqr;
+
+    const within = sorted.filter((v) => v >= lowerFence && v <= upperFence);
+    const minVal = within.length ? within[0] : sorted[0];
+    const maxVal = within.length ? within[within.length - 1] : sorted[sorted.length - 1];
+
+    // Add padding
+    let range = maxVal - minVal;
+    if (range === 0) range = Math.abs(maxVal) || 1;
+    const pad = range * 0.1; // 10% padding
+    this.yScaleMin = Math.floor((minVal - pad) * 1000) / 1000;
+    this.yScaleMax = Math.ceil((maxVal + pad) * 1000) / 1000;
+
+    function quantile(arr: number[], q: number): number {
+      if (!arr.length) return 0;
+      const pos = (arr.length - 1) * q;
+      const base = Math.floor(pos);
+      const rest = pos - base;
+      if (arr[base + 1] !== undefined) {
+        return arr[base] + rest * (arr[base + 1] - arr[base]);
+      } else {
+        return arr[base];
+      }
+    }
   }
 
   // ===== Dataset meta =====
@@ -253,6 +309,87 @@ export class DatasetEntries implements OnInit, OnDestroy {
       } catch {}
     } else {
       input?.focus();
+    }
+  }
+
+  // ===== New helpers & features =====
+  resetNewEntry(): void {
+    this.newEntry = this.createEmptyEntry();
+  }
+
+  // Filter & sort state
+  filterQuery = '';
+  filterFrom = '';
+  filterTo = '';
+  sortBy: 'date' | 'value' = 'date';
+  sortDir: 'desc' | 'asc' = 'desc';
+
+  private withinRange(dateStr: string): boolean {
+    if (!dateStr) return false;
+    const t = new Date(dateStr).getTime();
+    if (this.filterFrom) {
+      const from = new Date(this.filterFrom).getTime();
+      if (t < from) return false;
+    }
+    if (this.filterTo) {
+      const to = new Date(this.filterTo).getTime();
+      if (t > to) return false;
+    }
+    return true;
+  }
+
+  viewEntries(): Entry[] {
+    const q = this.filterQuery.trim().toLowerCase();
+    const filtered = (this.entries || []).filter((e) => {
+      const inText = !q || (e.label || '').toLowerCase().includes(q);
+      const inDate = this.withinRange(e.date as any);
+      return inText && inDate;
+    });
+
+    const sorted = [...filtered].sort((a, b) => {
+      if (this.sortBy === 'date') {
+        const da = new Date(a.date as any).getTime();
+        const db = new Date(b.date as any).getTime();
+        return this.sortDir === 'desc' ? db - da : da - db;
+      } else {
+        const va = Number(a.value) || 0;
+        const vb = Number(b.value) || 0;
+        return this.sortDir === 'desc' ? vb - va : va - vb;
+      }
+    });
+
+    return sorted;
+  }
+
+  get stats() {
+    const arr = this.viewEntries();
+    const count = arr.length;
+    const avg = count ? arr.reduce((s, e) => s + (Number(e.value) || 0), 0) / count : 0;
+    const latest = arr[0]?.value ?? null;
+    return { count, avg, latest };
+  }
+
+  exportFilteredCsv(): void {
+    const rows = this.viewEntries();
+    const header = ['id', 'label', 'value', 'date'];
+    const csv = [header.join(',')].concat(
+      rows.map((r) => [r.id ?? '', escapeCsv(r.label ?? ''), String(r.value ?? ''), String(r.date ?? '')].join(','))
+    ).join('\n');
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    const ds = this.datasetName || 'dataset';
+    a.download = `${ds}-entries.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+
+    function escapeCsv(s: string): string {
+      if (s == null) return '';
+      const needsQuotes = /[",\n]/.test(s);
+      const esc = s.replace(/"/g, '""');
+      return needsQuotes ? `"${esc}"` : esc;
     }
   }
 
