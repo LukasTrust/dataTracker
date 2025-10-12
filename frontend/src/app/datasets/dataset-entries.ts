@@ -49,7 +49,7 @@ export class DatasetEntries implements OnInit, OnDestroy {
   // Graph state
   graphType = signal<GraphType>('actual');
   graphEntries: Entry[] = [];
-  chartData: { name: string; series: { name: string; value: number }[] }[] = [];
+  chartData: { name: string; series: { name: Date | string; value: number }[] }[] = [];
 
   // Interactive chart options
   robustScale = signal<boolean>(true);
@@ -381,9 +381,30 @@ export class DatasetEntries implements OnInit, OnDestroy {
   get stats() {
     const arr = this.viewEntries();
     const count = arr.length;
-    const avg = count ? arr.reduce((s, e) => s + (Number(e.value) || 0), 0) / count : 0;
+    const values = arr.map(e => Number(e.value) || 0);
+    const sum = values.reduce((s, v) => s + v, 0);
+    const avg = count ? sum / count : 0;
+
+    // Determine time span from earliest to latest filtered entry
+    let timeSpan = '';
+    if (count > 0) {
+      const times = arr
+        .map(e => new Date(e.date as any).getTime())
+        .filter(t => !isNaN(t));
+      if (times.length > 0) {
+        const minT = Math.min(...times);
+        const maxT = Math.max(...times);
+        const dayMs = 24 * 60 * 60 * 1000;
+        const days = Math.max(0, Math.round((maxT - minT) / dayMs));
+        const fromStr = DateUtils.toDateInputValue(new Date(minT).toISOString());
+        const toStr = DateUtils.toDateInputValue(new Date(maxT).toISOString());
+        timeSpan = `${fromStr} → ${toStr} (${days} day${days === 1 ? '' : 's'})`;
+      }
+    }
+
+    // Keep legacy fields for compatibility
     const latest = arr[0]?.value ?? null;
-    return { count, avg, latest };
+    return { count, avg, latest, sum, timeSpan };
   }
 
   exportFilteredCsv(): void {

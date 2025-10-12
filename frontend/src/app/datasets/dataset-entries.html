@@ -1,6 +1,6 @@
 <div class="container">
   <div>
-    <h2><i class="fas fa-database"></i> {{ UI_TEXT.headers.dataset }} </h2>
+    <h2><i class="fas fa-database"></i> {{ datasetName || UI_TEXT.headers.dataset }} </h2>
 
     <!-- Tabs -->
     <div class="tabs">
@@ -62,10 +62,23 @@
       </div>
 
       <!-- Quick stats -->
-      <div class="stats" style="display:flex; gap:16px; flex-wrap:wrap; margin-bottom:8px;">
-        <div class="stat-card">{{ UI_TEXT.stats.count }}: {{stats.count}}</div>
-        <div class="stat-card">{{ UI_TEXT.stats.avg }}: {{stats.avg | number:'1.0-2'}}</div>
-        <div class="stat-card">{{ UI_TEXT.stats.latest }}: {{stats.latest}}</div>
+      <div class="stats">
+        <div class="stat-card">
+          <div class="label">Count</div>
+          <div class="value">{{ stats.count }}</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Avg</div>
+          <div class="value">{{ stats.avg | number:'1.0-2' }}</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Sum</div>
+          <div class="value">{{ stats.sum | number:'1.0-2' }}</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Time span</div>
+          <div class="value">{{ stats.timeSpan || '—' }}</div>
+        </div>
       </div>
 
       <table class="table">
